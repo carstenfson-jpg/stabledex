@@ -37,18 +37,47 @@ export default function SearchBar() {
   function handleChange(v: string) {
     setValue(v)
     if (timerRef.current) clearTimeout(timerRef.current)
-    if (v.trim().length < 2) { setSuggestions([]); setOpen(false); return }
+    if (v.trim().length < 1) { setSuggestions([]); setOpen(false); return }
     timerRef.current = setTimeout(async () => {
       const supabase = createClient()
-      const { data } = await supabase
-        .from('horses')
-        .select('id, name, breed, current_rider:riders!current_rider_id(name), results(competition:competitions(level))')
-        .ilike('name', `%${v.trim()}%`)
-        .limit(5)
-      const rows = (data ?? []) as unknown as Suggestion[]
-      setSuggestions(rows)
-      setOpen(rows.length > 0)
-    }, 200)
+      const term = v.trim()
+
+      // Search horses by name and riders by name in parallel
+      const [{ data: byName }, { data: riderRows }] = await Promise.all([
+        supabase
+          .from('horses')
+          .select('id, name, breed, current_rider:riders!current_rider_id(name), results(competition:competitions(level))')
+          .ilike('name', `%${term}%`)
+          .limit(5),
+        supabase
+          .from('riders')
+          .select('id')
+          .ilike('name', `%${term}%`)
+          .limit(5),
+      ])
+
+      const riderIds = (riderRows ?? []).map((r: { id: string }) => r.id)
+      let byRider: Suggestion[] = []
+      if (riderIds.length > 0) {
+        const { data } = await supabase
+          .from('horses')
+          .select('id, name, breed, current_rider:riders!current_rider_id(name), results(competition:competitions(level))')
+          .in('current_rider_id', riderIds)
+          .limit(5)
+        byRider = (data ?? []) as unknown as Suggestion[]
+      }
+
+      // Merge, deduplicate by id, cap at 6
+      const seen = new Set<string>()
+      const merged: Suggestion[] = []
+      for (const s of [...(byName ?? []) as unknown as Suggestion[], ...byRider]) {
+        if (!seen.has(s.id)) { seen.add(s.id); merged.push(s) }
+        if (merged.length >= 6) break
+      }
+
+      setSuggestions(merged)
+      setOpen(merged.length > 0)
+    }, 150)
   }
 
   const submit = useCallback(
