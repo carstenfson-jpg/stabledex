@@ -15,14 +15,69 @@ interface Suggestion {
   results: Array<{ competition: { level: string } | null }>
 }
 
+const PLACEHOLDER_PHRASES = [
+  'Peder Fredricson',
+  'Catch Me Not S',
+  'Maikel van der Vleuten',
+  'Killer Queen VDM',
+  'Jessica von Bredow-Werndl',
+  'Dalera BB',
+  'Ben Maher',
+  'Explosion W',
+]
+
+function useAnimatedPlaceholder(active: boolean) {
+  const [display, setDisplay] = useState('')
+  const phraseIdx = useRef(0)
+  const charIdx = useRef(0)
+  const deleting = useRef(false)
+  const rafRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (!active) { setDisplay(''); return }
+
+    function tick() {
+      const phrase = PLACEHOLDER_PHRASES[phraseIdx.current]
+
+      if (!deleting.current) {
+        charIdx.current += 1
+        setDisplay(phrase.slice(0, charIdx.current))
+        if (charIdx.current >= phrase.length) {
+          deleting.current = true
+          rafRef.current = setTimeout(tick, 1600) // pause at end
+          return
+        }
+        rafRef.current = setTimeout(tick, 75)
+      } else {
+        charIdx.current -= 1
+        setDisplay(phrase.slice(0, charIdx.current))
+        if (charIdx.current <= 0) {
+          deleting.current = false
+          phraseIdx.current = (phraseIdx.current + 1) % PLACEHOLDER_PHRASES.length
+          rafRef.current = setTimeout(tick, 400) // pause before next
+          return
+        }
+        rafRef.current = setTimeout(tick, 32)
+      }
+    }
+
+    rafRef.current = setTimeout(tick, 900)
+    return () => { if (rafRef.current) clearTimeout(rafRef.current) }
+  }, [active])
+
+  return display
+}
+
 export default function SearchBar() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [value, setValue] = useState(searchParams.get('q') ?? '')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [open, setOpen] = useState(false)
+  const [focused, setFocused] = useState(false)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const animatedPlaceholder = useAnimatedPlaceholder(!focused && !value)
 
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
@@ -99,8 +154,9 @@ export default function SearchBar() {
           type="text"
           value={value}
           onChange={(e) => handleChange(e.target.value)}
-          onFocus={() => suggestions.length > 0 && setOpen(true)}
-          placeholder="Search horse name, rider, or studbook..."
+          onFocus={() => { setFocused(true); suggestions.length > 0 && setOpen(true) }}
+          onBlur={() => setFocused(false)}
+          placeholder={focused || value ? 'Search horse name, rider, or studbook...' : animatedPlaceholder}
           className="flex-1 h-11 px-4 bg-[#1a1a1a] border border-white/[.07] rounded-lg text-sm text-[#f2f2f2] placeholder-[#4b5563] outline-none focus:border-white/20 transition-colors"
         />
         <button type="submit" className="h-11 px-5 bg-[#f2f2f2] text-[#0f0f0f] text-sm font-medium rounded-lg hover:bg-white transition-colors shrink-0">

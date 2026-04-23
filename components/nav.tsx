@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import NavWatchlist from './nav-watchlist'
 import NavPaletteButton from './nav-palette-button'
+import NavStableLink from './nav-stable-link'
+import ThemeToggle from './theme-toggle'
 
 export default function Nav() {
   return (
@@ -12,7 +14,7 @@ export default function Nav() {
         >
           STABLEDEX
         </Link>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           <div className="hidden sm:flex items-center gap-6">
             <Link
               href="/"
@@ -26,6 +28,7 @@ export default function Nav() {
             >
               Rankings
             </Link>
+            <NavStableLink />
             <Link
               href="/events"
               className="text-sm text-[#6b7280] hover:text-[#f2f2f2] transition-colors"
@@ -34,6 +37,7 @@ export default function Nav() {
             </Link>
             <NavWatchlist />
           </div>
+          <ThemeToggle />
           <NavPaletteButton />
         </div>
       </div>

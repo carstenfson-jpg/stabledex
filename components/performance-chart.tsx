@@ -12,10 +12,20 @@ const PERIODS = [
   { label: 'All time', days: Infinity },
 ]
 
+function cssVar(name: string, fallback: string): string {
+  if (typeof document === 'undefined') return fallback
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
+}
+
+function isDark(): boolean {
+  if (typeof document === 'undefined') return true
+  return document.documentElement.getAttribute('data-theme') !== 'light'
+}
+
 function faultColor(faults: number | null): string {
-  if (faults == null) return '#6b7280'
-  if (faults === 0) return '#22c55e'
-  if (faults < 8) return '#9ca3af'
+  if (faults == null) return cssVar('--c-muted', '#6b7280')
+  if (faults === 0) return cssVar('--c-accent', '#22c55e')
+  if (faults < 8) return cssVar('--c-muted', '#6b7280')
   return '#ef4444'
 }
 
@@ -28,6 +38,15 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
   const chartRef = useRef<unknown>(null)
   const rafRef = useRef<number>(0)
   const [period, setPeriod] = useState(2)
+  const [theme, setTheme] = useState<string>('dark')
+
+  useEffect(() => {
+    function onTheme(e: Event) {
+      setTheme((e as CustomEvent).detail as string)
+    }
+    window.addEventListener('themechange', onTheme)
+    return () => window.removeEventListener('themechange', onTheme)
+  }, [])
 
   const getFiltered = useCallback(
     (idx: number) => {
@@ -37,7 +56,6 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
         .filter((r) => r.competition && r.faults != null)
         .filter((r) => !cutoff || new Date(r.competition.date) >= cutoff)
 
-      // Group by competition, average faults and placement
       const byComp = new Map<string, ResultWithComp[]>()
       for (const r of raw) {
         const key = r.competition.id
@@ -57,12 +75,10 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
     [results]
   )
 
-
   const runClipAnimation = useCallback((chart: any) => {
     cancelAnimationFrame(rafRef.current)
     const start = performance.now()
     const duration = 900
-
     function tick(now: number) {
       const t = Math.min((now - start) / duration, 1)
       chart.options.plugins.clipLeft.progress = easeInOut(t)
@@ -79,6 +95,15 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
 
       const prev = chartRef.current as any
       if (prev) { prev.destroy(); chartRef.current = null }
+
+      const dark = isDark()
+      const gridColor   = dark ? 'rgba(255,255,255,0.04)' : 'rgba(22,35,28,0.04)'
+      const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(22,35,28,0.07)'
+      const tooltipBg   = dark ? '#161616' : '#ffffff'
+      const tooltipBdr  = dark ? 'rgba(255,255,255,0.08)' : 'rgba(22,35,28,0.1)'
+      const mutedColor  = cssVar('--c-muted', dark ? '#6b7280' : '#6b7c74')
+      const textColor   = cssVar('--c-text',  dark ? '#f2f2f2' : '#16231c')
+      const accentColor = cssVar('--c-accent', dark ? '#22c55e' : '#4f8a6f')
 
       const grouped = getFiltered(period)
       const showYear = grouped.length > 14
@@ -111,10 +136,10 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
           datasets: [
             {
               data: grouped.map((g) => g.avgFaults ?? 0),
-              borderColor: 'rgba(34,197,94,0.6)',
+              borderColor: `${accentColor}99`,
               borderWidth: 2,
               pointBackgroundColor: grouped.map((g) => faultColor(g.avgFaults)),
-              pointBorderColor: grouped.map((g) => faultColor(g.avgFaults)),
+              pointBorderColor:     grouped.map((g) => faultColor(g.avgFaults)),
               pointRadius: 5,
               pointHoverRadius: 7,
               tension: 0.35,
@@ -131,18 +156,18 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
           },
           scales: {
             x: {
-              grid: { color: 'rgba(255,255,255,0.04)' },
-              border: { color: 'rgba(255,255,255,0.07)' },
-              ticks: { color: '#6b7280', font: { size: 10 }, maxTicksLimit: 9 },
+              grid: { color: gridColor },
+              border: { color: borderColor },
+              ticks: { color: mutedColor, font: { size: 10 }, maxTicksLimit: 9 },
             },
             y: {
               reverse: true,
               min: -0.5,
               max: 13,
-              grid: { color: 'rgba(255,255,255,0.04)' },
-              border: { color: 'rgba(255,255,255,0.07)' },
+              grid: { color: gridColor },
+              border: { color: borderColor },
               ticks: {
-                color: '#6b7280',
+                color: mutedColor,
                 font: { size: 10 },
                 stepSize: 4,
                 callback: (v: unknown) => (Number(v) < 0 ? '' : String(v)),
@@ -152,12 +177,12 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: '#161616',
-              borderColor: 'rgba(255,255,255,0.08)',
+              backgroundColor: tooltipBg,
+              borderColor: tooltipBdr,
               borderWidth: 1,
-              titleColor: '#f2f2f2',
+              titleColor: textColor,
               titleFont: { size: 12, weight: 'bold' as const },
-              bodyColor: '#9ca3af',
+              bodyColor: mutedColor,
               bodyFont: { size: 11 },
               padding: 10,
               displayColors: false,
@@ -167,9 +192,7 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
                   const g = grouped[items[0].dataIndex]
                   return g?.competition?.date
                     ? new Date(g.competition.date).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
+                        day: 'numeric', month: 'long', year: 'numeric',
                       })
                     : ''
                 },
@@ -193,7 +216,7 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
     })
 
     return () => { cancelAnimationFrame(rafRef.current) }
-  }, [period, getFiltered, runClipAnimation])
+  }, [period, theme, getFiltered, runClipAnimation])
 
   useEffect(() => {
     return () => {
@@ -206,7 +229,6 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
 
   return (
     <div>
-      {/* Period tabs */}
       <div className="flex items-center gap-1 mb-4">
         {PERIODS.map((p, i) => (
           <button

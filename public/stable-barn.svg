@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Roof outline -->
+  <polyline points="10,70 100,8 190,70" />
+  <!-- Gable window -->
+  <rect x="86" y="28" width="28" height="26" rx="1" />
+  <line x1="86" y1="28" x2="114" y2="54" />
+  <line x1="114" y1="28" x2="86" y2="54" />
+
+  <!-- Main walls -->
+  <rect x="14" y="68" width="172" height="84" />
+
+  <!-- Left stall vertical divider -->
+  <line x1="68" y1="68" x2="68" y2="152" />
+  <!-- Right stall vertical divider -->
+  <line x1="132" y1="68" x2="132" y2="152" />
+
+  <!-- Left stall: Dutch door split line -->
+  <line x1="14" y1="114" x2="68" y2="114" />
+  <!-- Left stall: X on lower half -->
+  <line x1="14" y1="114" x2="68" y2="152" />
+  <line x1="68" y1="114" x2="14" y2="152" />
+  <!-- Left stall: horse head -->
+  <circle cx="41" cy="88" r="10" />
+  <path d="M36,82 Q38,74 41,74 Q44,74 46,82" />
+  <line x1="41" y1="98" x2="41" y2="104" />
+  <line x1="34" y1="104" x2="48" y2="104" />
+
+  <!-- Center double door split line -->
+  <line x1="68" y1="114" x2="132" y2="114" />
+  <!-- Center door vertical -->
+  <line x1="100" y1="68" x2="100" y2="114" />
+  <!-- Center door X left panel (lower) -->
+  <line x1="68" y1="114" x2="100" y2="152" />
+  <line x1="100" y1="114" x2="68" y2="152" />
+  <!-- Center door X right panel (lower) -->
+  <line x1="100" y1="114" x2="132" y2="152" />
+  <line x1="132" y1="114" x2="100" y2="152" />
+
+  <!-- Right stall: Dutch door split line -->
+  <line x1="132" y1="114" x2="186" y2="114" />
+  <!-- Right stall: X on lower half -->
+  <line x1="132" y1="114" x2="186" y2="152" />
+  <line x1="186" y1="114" x2="132" y2="152" />
+  <!-- Right stall: horse head -->
+  <circle cx="159" cy="88" r="10" />
+  <path d="M154,82 Q156,74 159,74 Q162,74 164,82" />
+  <line x1="159" y1="98" x2="159" y2="104" />
+  <line x1="152" y1="104" x2="166" y2="104" />
+</svg>

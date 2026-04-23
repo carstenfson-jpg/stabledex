@@ -6,8 +6,10 @@ import { useEffect, useRef, useState } from 'react'
 import PerformanceChart from '@/components/performance-chart'
 import StrengthsRadar from '@/components/strengths-radar'
 import WatchButton from '@/components/watch-button'
-import { getCountryFlag, type HorseWithDetails } from '@/lib/types'
+import { getCountryFlag, getBestLevel, LEVEL_ORDER, type HorseWithDetails } from '@/lib/types'
 import type { Result, Competition, Rider } from '@/lib/types'
+import { getHorseTier, HorseIcon } from '@/components/horse-icon'
+import AddToStableButton from '@/components/add-to-stable-button'
 
 type ResultRow = Result & { rider: Rider; competition: Competition }
 
@@ -28,6 +30,22 @@ interface Props {
   stats: HorseStats
   discipline: string
   sortedResults: ResultRow[]
+}
+
+// ── Level filter stats recomputation ─────────────────────────────────────────
+function computeFilteredStats(results: ResultRow[]) {
+  const jumping = results.filter((r) => r.competition?.discipline === 'Show Jumping' && r.faults != null)
+  const totalFaults = jumping.reduce((s, r) => s + (r.faults ?? 0), 0)
+  const avgFaults = jumping.length > 0 ? totalFaults / jumping.length : null
+  const clearRounds = jumping.filter((r) => r.faults === 0).length
+  const clearRoundPct = jumping.length > 0 ? (clearRounds / jumping.length) * 100 : null
+  const totalStarts = results.length
+  const placements = results.map((r) => r.placement).filter((p): p is number => p != null)
+  const wins = placements.filter((p) => p === 1).length
+  const top3 = placements.filter((p) => p <= 3).length
+  const winRate = totalStarts > 0 ? (wins / totalStarts) * 100 : null
+  const top3Rate = totalStarts > 0 ? (top3 / totalStarts) * 100 : null
+  return { avgFaults, clearRoundPct, totalStarts, winRate, top3Rate }
 }
 
 // ── Feature 5: animated number hook ──────────────────────────────────────────
@@ -76,6 +94,52 @@ function CopyLinkButton() {
         </>
       )}
     </button>
+  )
+}
+
+// ── Level filter dropdown ─────────────────────────────────────────────────────
+function LevelFilter({ levels, value, onChange }: { levels: string[]; value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  const label = value === 'all' ? 'All competitions' : value
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 h-7 px-2.5 rounded-lg border border-[0.5px] border-white/[.08] bg-white/[.03] hover:bg-white/[.06] text-[10px] text-[#6b7280] hover:text-[#9ca3af] transition-colors"
+      >
+        {label}
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-36 rounded-lg border border-[0.5px] border-white/[.1] bg-[#1a1a1a] shadow-xl z-50 py-1 overflow-hidden">
+          {['all', ...levels].map((lvl) => (
+            <button
+              key={lvl}
+              onClick={() => { onChange(lvl); setOpen(false) }}
+              className={`w-full text-left px-3 py-1.5 text-[11px] transition-colors ${
+                value === lvl ? 'text-[#f2f2f2] bg-white/[.06]' : 'text-[#6b7280] hover:text-[#9ca3af] hover:bg-white/[.03]'
+              }`}
+            >
+              {lvl === 'all' ? 'All competitions' : lvl}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -146,24 +210,38 @@ function Timeline({ results }: { results: ResultRow[] }) {
 
 export default function HorseProfileClient({ horse, stats, discipline, sortedResults }: Props) {
   const [tab, setTab] = useState<'stats' | 'results' | 'strengths'>('stats')
+  const [levelFilter, setLevelFilter] = useState<string>('all')
 
-  // Feature 5: animated stat values
-  const aFaults = useCountUp(stats.avgFaults ?? 0, 0)
-  const aClear = useCountUp(stats.clearRoundPct ?? 0, 100)
-  const aStarts = useCountUp(stats.totalStarts, 200)
-  const aWin = useCountUp(stats.winRate ?? 0, 300)
-  const aTop3 = useCountUp(stats.top3Rate ?? 0, 300)
+  // Unique competition levels present in this horse's results, best → worst
+  const uniqueLevels = Array.from(
+    new Set(sortedResults.map((r) => r.competition?.level).filter(Boolean) as string[])
+  ).sort((a, b) => (LEVEL_ORDER[b] ?? 0) - (LEVEL_ORDER[a] ?? 0))
+
+  const filteredResults = levelFilter === 'all'
+    ? sortedResults
+    : sortedResults.filter((r) => r.competition?.level === levelFilter)
+
+  const dynStats = levelFilter === 'all'
+    ? { avgFaults: stats.avgFaults, clearRoundPct: stats.clearRoundPct, totalStarts: stats.totalStarts, winRate: stats.winRate, top3Rate: stats.top3Rate }
+    : computeFilteredStats(filteredResults)
+
+  // Feature 5: animated stat values (re-animate on filter change)
+  const aFaults = useCountUp(dynStats.avgFaults ?? 0, 0)
+  const aClear = useCountUp(dynStats.clearRoundPct ?? 0, 100)
+  const aStarts = useCountUp(dynStats.totalStarts, 200)
+  const aWin = useCountUp(dynStats.winRate ?? 0, 300)
+  const aTop3 = useCountUp(dynStats.top3Rate ?? 0, 300)
 
   const statCards = [
     {
       label: 'Avg faults / round',
-      value: stats.avgFaults != null ? aFaults.toFixed(1) : '—',
+      value: dynStats.avgFaults != null ? aFaults.toFixed(1) : '—',
       sub: 'show jumping',
       tooltip: 'Average faults per show jumping round across all starts. Lower is better — 0 means a clear round.',
     },
     {
       label: 'Clear rounds',
-      value: stats.clearRoundPct != null ? `${aClear.toFixed(0)}%` : '—',
+      value: dynStats.clearRoundPct != null ? `${aClear.toFixed(0)}%` : '—',
       sub: 'of jumping rounds',
       tooltip: 'Percentage of show jumping rounds completed with zero faults.',
     },
@@ -175,15 +253,38 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
     },
     {
       label: 'Win / Top 3',
-      value: stats.winRate != null ? `${aWin.toFixed(0)}% / ${aTop3.toFixed(0)}%` : '—',
+      value: dynStats.winRate != null ? `${aWin.toFixed(0)}% / ${aTop3.toFixed(0)}%` : '—',
       sub: 'placement rate',
       tooltip: 'Win rate: % of starts finishing 1st. Top 3 rate: % finishing in the top 3 places.',
     },
   ]
 
-  const chartResults = sortedResults.filter(
+  const chartResults = filteredResults.filter(
     (r) => r.competition?.discipline === 'Show Jumping' && r.faults != null
   ) as Parameters<typeof PerformanceChart>[0]['results']
+
+  const recentPlacements = sortedResults.slice(0, 5).map((r) => r.placement).filter((p): p is number => p != null)
+  const olderPlacements = sortedResults.slice(5, 10).map((r) => r.placement).filter((p): p is number => p != null)
+  const avgRecent = recentPlacements.length > 0 ? recentPlacements.reduce((a, b) => a + b, 0) / recentPlacements.length : null
+  const avgOlder = olderPlacements.length > 0 ? olderPlacements.reduce((a, b) => a + b, 0) / olderPlacements.length : null
+  const formTrend: 'up' | 'down' | 'flat' =
+    avgRecent != null && avgOlder != null
+      ? avgRecent < avgOlder ? 'up' : avgRecent > avgOlder ? 'down' : 'flat'
+      : 'flat'
+
+  const stableEntry = {
+    id: horse.id,
+    name: horse.name,
+    breed: horse.breed,
+    age: stats.age,
+    best_level: stats.bestLevel,
+    rider_name: horse.current_rider?.name ?? '',
+    rider_country: horse.current_rider?.country ?? '',
+    latest_place: sortedResults[0]?.placement ?? null,
+    latest_comp: sortedResults[0]?.competition?.name ?? '',
+    form_trend: formTrend,
+    added_at: new Date().toISOString(),
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
@@ -194,11 +295,7 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
         transition={{ duration: 0.38 }}
         className="flex items-start gap-4 mb-8"
       >
-        <div className="w-12 h-12 rounded-xl bg-[#1a1a1a] border border-[0.5px] border-white/[.08] flex items-center justify-center shrink-0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-[#4b5563]">
-            <path d="M21 8c0 2.5-1.5 5-4 6.5V18a1 1 0 01-1 1H8a1 1 0 01-1-1v-3.5C4.5 13 3 10.5 3 8c0-4 4-7 9-7s9 3 9 7z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+        <HorseIcon tier={getHorseTier(stats.bestLevel)} active boxSize={48} size={22} radius={12} />
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <h1 className="text-2xl font-semibold text-[#f2f2f2]">{horse.name}</h1>
@@ -210,10 +307,18 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
             <p className="text-sm text-[#6b7280]">
               {horse.gender}
               {stats.age ? ` · ${stats.age} years old` : ''}
-              {horse.current_rider && <span className="ml-2 text-[#9ca3af]">· {horse.current_rider.name}</span>}
+              {horse.current_rider && (
+                <>
+                  {' · '}
+                  <Link href={`/rider/${horse.current_rider.id}`} className="text-[#f2f2f2] underline underline-offset-2 decoration-white/20 hover:decoration-white/60 transition-all">
+                    {horse.current_rider.name}
+                  </Link>
+                </>
+              )}
             </p>
             <CopyLinkButton />
             <WatchButton horseId={horse.id} />
+            <AddToStableButton entry={stableEntry} />
           </div>
         </div>
       </motion.div>
@@ -233,6 +338,9 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
       <div className="sm:hidden">
         {tab === 'stats' && (
           <>
+            <div className="flex justify-end mb-3">
+              <LevelFilter levels={uniqueLevels} value={levelFilter} onChange={setLevelFilter} />
+            </div>
             <div className="grid grid-cols-2 gap-3 mb-6">
               {statCards.map((card) => (
                 <div key={card.label} className="border border-[0.5px] border-white/[.07] rounded-xl p-4 bg-[#1a1a1a]">
@@ -253,7 +361,7 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
                 <Row label="Gender" value={horse.gender ?? '—'} />
                 <Row label="Sire" value={horse.sire ?? '—'} />
                 <Row label="Dam" value={horse.dam ?? '—'} />
-                <Row label="Rider" value={horse.current_rider?.name ?? '—'} />
+                <Row label="Rider" value={horse.current_rider?.name ?? '—'} href={horse.current_rider ? `/rider/${horse.current_rider.id}` : undefined} />
                 <Row label="Best level" value={stats.bestLevel ?? '—'} />
               </dl>
             </div>
@@ -299,6 +407,9 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
       {/* ── DESKTOP: all sections always visible ─────────────────────────────── */}
       <div className="hidden sm:block">
         {/* Stats cards row */}
+        <div className="flex justify-end mb-3">
+          <LevelFilter levels={uniqueLevels} value={levelFilter} onChange={setLevelFilter} />
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {statCards.map((card, i) => (
             <motion.div
@@ -426,11 +537,15 @@ function Badge({ children, accent }: { children: React.ReactNode; accent?: boole
   )
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
       <dt className="text-xs text-[#4b5563] shrink-0">{label}</dt>
-      <dd className="text-xs text-[#f2f2f2] text-right truncate">{value}</dd>
+      <dd className="text-xs text-[#f2f2f2] text-right truncate">
+        {href ? (
+          <Link href={href} className="underline underline-offset-2 decoration-white/20 hover:decoration-white/60 transition-all">{value}</Link>
+        ) : value}
+      </dd>
     </div>
   )
 }

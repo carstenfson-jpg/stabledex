@@ -6,14 +6,33 @@ import { motion } from 'framer-motion'
 const AXES = ['Consistency', 'Win rate', 'Top 3', 'Level', 'Experience', 'Form']
 
 interface Props {
-  values: number[] // 0–100, length 6, order matches AXES
+  values: number[]
+}
+
+function cssVar(name: string, fallback: string): string {
+  if (typeof document === 'undefined') return fallback
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
+}
+
+function isDark(): boolean {
+  if (typeof document === 'undefined') return true
+  return document.documentElement.getAttribute('data-theme') !== 'light'
 }
 
 export default function StrengthsRadar({ values }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rafRef = useRef<number | null>(null)
   const startRef = useRef<number | null>(null)
+  const [theme, setTheme] = useState<string>('dark')
   const DURATION = 800
+
+  useEffect(() => {
+    function onTheme(e: Event) {
+      setTheme((e as CustomEvent).detail as string)
+    }
+    window.addEventListener('themechange', onTheme)
+    return () => window.removeEventListener('themechange', onTheme)
+  }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -26,13 +45,20 @@ export default function StrengthsRadar({ values }: Props) {
     canvas.style.width = `${CSS_SIZE}px`
     canvas.style.height = `${CSS_SIZE}px`
 
+    const dark = isDark()
+    const ringStroke   = dark ? 'rgba(255,255,255,0.05)' : 'rgba(22,35,28,0.07)'
+    const axisStroke   = dark ? 'rgba(255,255,255,0.06)' : 'rgba(22,35,28,0.08)'
+    const fillColor    = dark ? 'rgba(34,197,94,0.12)'   : 'rgba(79,138,111,0.10)'
+    const strokeColor  = dark ? 'rgba(34,197,94,0.55)'   : 'rgba(79,138,111,0.65)'
+    const pointColor   = cssVar('--c-accent', dark ? '#22c55e' : '#4f8a6f')
+    const labelColor   = cssVar('--c-muted',  dark ? '#6b7280' : '#6b7c74')
+
     function draw(progress: number) {
       const ctx = canvas!.getContext('2d')
       if (!ctx) return
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       const size = CSS_SIZE
-      const cx = size / 2
-      const cy = size / 2
+      const cx = size / 2, cy = size / 2
       const r = size * 0.33
       const n = 6
 
@@ -49,7 +75,7 @@ export default function StrengthsRadar({ values }: Props) {
           i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
         }
         ctx.closePath()
-        ctx.strokeStyle = 'rgba(255,255,255,0.05)'
+        ctx.strokeStyle = ringStroke
         ctx.lineWidth = 0.5
         ctx.stroke()
       }
@@ -60,7 +86,7 @@ export default function StrengthsRadar({ values }: Props) {
         ctx.beginPath()
         ctx.moveTo(cx, cy)
         ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle))
-        ctx.strokeStyle = 'rgba(255,255,255,0.06)'
+        ctx.strokeStyle = axisStroke
         ctx.lineWidth = 0.5
         ctx.stroke()
       }
@@ -75,9 +101,9 @@ export default function StrengthsRadar({ values }: Props) {
         i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
       }
       ctx.closePath()
-      ctx.fillStyle = 'rgba(34,197,94,0.12)'
+      ctx.fillStyle = fillColor
       ctx.fill()
-      ctx.strokeStyle = 'rgba(34,197,94,0.55)'
+      ctx.strokeStyle = strokeColor
       ctx.lineWidth = 1.5
       ctx.stroke()
 
@@ -89,12 +115,12 @@ export default function StrengthsRadar({ values }: Props) {
         const y = cy + r * val * Math.sin(angle)
         ctx.beginPath()
         ctx.arc(x, y, 2.5, 0, Math.PI * 2)
-        ctx.fillStyle = '#22c55e'
+        ctx.fillStyle = pointColor
         ctx.fill()
       }
 
       // Labels
-      ctx.fillStyle = 'rgba(107,114,128,0.9)'
+      ctx.fillStyle = labelColor
       ctx.font = '9px Inter, ui-sans-serif, system-ui, sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
@@ -111,31 +137,26 @@ export default function StrengthsRadar({ values }: Props) {
       if (!startRef.current) startRef.current = ts
       const elapsed = ts - startRef.current
       const t = Math.min(elapsed / DURATION, 1)
-      // ease in-out
       const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
       draw(eased)
-      if (t < 1) {
-        rafRef.current = requestAnimationFrame(animate)
-      }
+      if (t < 1) rafRef.current = requestAnimationFrame(animate)
     }
 
     startRef.current = null
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
     rafRef.current = requestAnimationFrame(animate)
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
-  }, [values])
+  }, [values, theme])
 
   return (
     <div className="border border-[0.5px] border-white/[.07] rounded-xl p-5 bg-[#1a1a1a]">
       <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-4">Strengths</p>
       <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-        {/* Radar */}
         <canvas ref={canvasRef} width={240} height={240} className="shrink-0 self-center" />
-
-        {/* Bars */}
         <div className="flex-1 flex flex-col gap-2.5">
           {AXES.map((axis, i) => {
             const v = values[i] ?? 0
-            const color = v > 70 ? '#22c55e' : v > 40 ? '#6b7280' : '#4b5563'
+            const color = v > 70 ? cssVar('--c-accent', '#22c55e') : v > 40 ? cssVar('--c-muted', '#6b7280') : '#4b5563'
             return (
               <div key={axis}>
                 <div className="flex items-center justify-between mb-1">

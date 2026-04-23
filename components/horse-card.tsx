@@ -55,7 +55,7 @@ export default function HorseCard({
           <div className="flex items-center gap-2">
             <span
               className="text-sm font-medium truncate transition-colors duration-150"
-              style={{ color: hovered ? '#ffffff' : '#f2f2f2' }}
+              style={{ color: 'var(--c-text)', opacity: hovered ? 1 : 0.9 }}
             >
               {name}
             </span>
@@ -74,7 +74,7 @@ export default function HorseCard({
         <div className="hidden sm:flex items-center gap-3 shrink-0">
           {sparkline && sparkline.length >= 3 && <Sparkline values={sparkline} />}
           <div className="text-right">
-            <p className="text-sm font-medium text-[#f2f2f2] tabular-nums">{stat}</p>
+            <p className="text-sm font-medium tabular-nums" style={{ color: 'var(--c-text)' }}>{stat}</p>
             <p className="text-[10px] text-[#4b5563] uppercase tracking-wider">{statLabel}</p>
           </div>
         </div>
