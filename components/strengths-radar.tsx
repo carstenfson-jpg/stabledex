@@ -127,9 +127,9 @@ export default function StrengthsRadar({ values }: Props) {
   return (
     <div className="border border-[0.5px] border-white/[.07] rounded-xl p-5 bg-[#1a1a1a]">
       <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-4">Strengths</p>
-      <div className="flex items-center gap-5">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-5">
         {/* Radar */}
-        <canvas ref={canvasRef} width={240} height={240} className="shrink-0" />
+        <canvas ref={canvasRef} width={240} height={240} className="shrink-0 self-center" />
 
         {/* Bars */}
         <div className="flex-1 flex flex-col gap-2.5">

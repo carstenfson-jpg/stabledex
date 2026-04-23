@@ -126,6 +126,9 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
           animation: false,
           responsive: true,
           maintainAspectRatio: false,
+          layout: {
+            padding: { top: 8, right: 10, bottom: 0, left: 0 },
+          },
           scales: {
             x: {
               grid: { color: 'rgba(255,255,255,0.04)' },
