@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { COUNTRIES } from '@/lib/types'
 
 const LEVEL_OPTIONS = [
   { label: 'CSI 5* / GP', value: 'gp5' },
@@ -97,6 +98,7 @@ export default function AdvancedFilters() {
   const urlAgeMin = Number(searchParams.get('ageMin') ?? 4)
   const urlAgeMax = Number(searchParams.get('ageMax') ?? 20)
   const urlMinStarts = Number(searchParams.get('minStarts') ?? 0)
+  const urlCountry = searchParams.get('country') ?? ''
   const levels = searchParams.get('advLevels')?.split(',').filter(Boolean) ?? []
 
   const [ageMin, setAgeMin] = useState(urlAgeMin)
@@ -126,7 +128,8 @@ export default function AdvancedFilters() {
   const activeCount =
     (urlAgeMin !== 4 || urlAgeMax !== 20 ? 1 : 0) +
     (levels.length > 0 ? 1 : 0) +
-    (urlMinStarts > 0 ? 1 : 0)
+    (urlMinStarts > 0 ? 1 : 0) +
+    (urlCountry ? 1 : 0)
 
   function toggleLevel(val: string) {
     const next = levels.includes(val) ? levels.filter((l) => l !== val) : [...levels, val]
@@ -134,7 +137,7 @@ export default function AdvancedFilters() {
   }
 
   function clearAll() {
-    apply({ ageMin: null, ageMax: null, advLevels: null, minStarts: null })
+    apply({ ageMin: null, ageMax: null, advLevels: null, minStarts: null, country: null })
   }
 
   return (
@@ -173,7 +176,7 @@ export default function AdvancedFilters() {
             transition={{ duration: 0.22, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="mt-4 mx-auto grid grid-cols-3 gap-6 p-5 border border-[0.5px] border-white/[.07] rounded-xl bg-[#111111]" style={{ maxWidth: 640 }}>
+            <div className="mt-4 mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 p-5 border border-[0.5px] border-white/[.07] rounded-xl bg-[#111111]" style={{ maxWidth: 640 }}>
 
               {/* Age range */}
               <div>
@@ -217,6 +220,24 @@ export default function AdvancedFilters() {
                     applyDebounced({ minStarts: v === 0 ? null : String(v) })
                   }}
                 />
+              </div>
+
+              {/* Country */}
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-3">Country</p>
+                <div className="flex flex-col gap-1.5">
+                  {COUNTRIES.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => apply({ country: urlCountry === c ? null : c })}
+                      className={`text-left text-xs py-0.5 transition-colors ${
+                        urlCountry === c ? 'text-emerald-400' : 'text-[#6b7280] hover:text-[#9ca3af]'
+                      }`}
+                    >
+                      {urlCountry === c ? '✓ ' : ''}{c}
+                    </button>
+                  ))}
+                </div>
               </div>
 
             </div>

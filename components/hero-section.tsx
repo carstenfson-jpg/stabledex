@@ -4,7 +4,6 @@ import { Suspense, useState } from 'react'
 import { motion } from 'framer-motion'
 import SearchBar from './search-bar'
 import FindMatch from './find-match'
-import FilterPills from './filter-pills'
 import AdvancedFilters from './advanced-filters'
 import FilterSheet from './filter-sheet'
 import DisciplineSwitch from './discipline-switch'
@@ -65,13 +64,12 @@ export default function HeroSection() {
         <Suspense><DisciplineSwitch /></Suspense>
       </motion.div>
 
-      {/* Country + advanced filters on same row */}
+      {/* Filters button — centered */}
       <motion.div
         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.32, ease: 'easeOut' }}
-        className="flex items-center justify-center gap-2"
+        className="flex justify-center"
       >
-        <Suspense><FilterPills /></Suspense>
         <Suspense><AdvancedFilters /></Suspense>
       </motion.div>
 
