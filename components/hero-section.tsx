@@ -14,14 +14,6 @@ export default function HeroSection() {
 
   return (
     <div className="mb-6 mx-auto text-center" style={{ maxWidth: 640 }}>
-      <motion.div
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.03, ease: 'easeOut' }}
-        className="flex justify-center mb-6"
-      >
-        <Suspense><DisciplineSwitch /></Suspense>
-      </motion.div>
-
       <motion.p
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.05, ease: 'easeOut' }}
@@ -67,7 +59,14 @@ export default function HeroSection() {
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.28, ease: 'easeOut' }}
-        className="flex justify-center"
+      >
+        <Suspense><DisciplineSwitch /></Suspense>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.32, ease: 'easeOut' }}
+        className="flex justify-center mt-3"
       >
         <Suspense><FilterPills /></Suspense>
       </motion.div>
