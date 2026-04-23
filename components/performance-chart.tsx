@@ -221,19 +221,10 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
             {p.label}
           </button>
         ))}
-        <div className="ml-auto flex items-center gap-3 text-[10px] text-[#4b5563]">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-            Clear
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#9ca3af] inline-block" />
-            4 faults
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
-            8+
-          </span>
+        <div className="hidden sm:flex items-center gap-3 text-[10px] text-[#4b5563] ml-auto">
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />Clear</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#9ca3af] inline-block" />4 faults</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" />8+</span>
         </div>
       </div>
 
