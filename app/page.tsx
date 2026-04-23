@@ -20,6 +20,10 @@ export default async function HomePage({ searchParams }: PageProps) {
   const level = params.level ?? ''
   const gender = params.gender ?? ''
   const sort = params.sort ?? 'ranking'
+  const ageMin = params.ageMin ? Number(params.ageMin) : null
+  const ageMax = params.ageMax ? Number(params.ageMax) : null
+  const advLevels = params.advLevels?.split(',').filter(Boolean) ?? []
+  const minStarts = params.minStarts ? Number(params.minStarts) : 0
 
   const supabase = await createClient()
 
@@ -104,6 +108,30 @@ export default async function HomePage({ searchParams }: PageProps) {
     horses = horses.filter((h) =>
       h.results.some((r) => r.competition?.discipline === discipline)
     )
+  }
+
+  // Advanced filters
+  if (ageMin !== null || ageMax !== null) {
+    const now = new Date()
+    horses = horses.filter((h) => {
+      if (!h.date_of_birth) return true
+      const age = (now.getTime() - new Date(h.date_of_birth).getTime()) / (365.25 * 86400000)
+      if (ageMin !== null && age < ageMin) return false
+      if (ageMax !== null && age > ageMax) return false
+      return true
+    })
+  }
+  if (advLevels.length > 0) {
+    const levelMap2: Record<string, string[]> = {
+      gp5: ['CSI5*', 'GP', 'CDIO5*', 'CCI4*'], csi4: ['CSI4*', 'CDI4*'],
+      csi3: ['CSI3*', 'CDI3*', 'CCI3*'], csi21: ['CSI1*', 'CSI2*', 'CDI1*', 'CDI2*', 'CCI1*', 'CCI2*'],
+      young: ['CSI-YH', 'YH', 'Young Horse'],
+    }
+    const allowed = new Set(advLevels.flatMap((l) => levelMap2[l] ?? []))
+    horses = horses.filter((h) => h.results.some((r) => r.competition && allowed.has(r.competition.level)))
+  }
+  if (minStarts > 0) {
+    horses = horses.filter((h) => h.results.length >= minStarts)
   }
 
   if (sort === 'name') {

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import NavWatchlist from './nav-watchlist'
+import NavPaletteButton from './nav-palette-button'
 
 export default function Nav() {
   return (
@@ -31,6 +32,7 @@ export default function Nav() {
             Events
           </Link>
           <NavWatchlist />
+          <NavPaletteButton />
         </div>
       </div>
     </nav>

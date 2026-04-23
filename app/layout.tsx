@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Nav from '@/components/nav'
 import CompareBar from '@/components/compare-bar'
+import CommandPalette from '@/components/command-palette'
+import { ToastProvider } from '@/components/toast'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -24,9 +26,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-[#0f0f0f] text-[#f2f2f2] antialiased">
-        <Nav />
-        <main className="flex-1">{children}</main>
-        <CompareBar />
+        <ToastProvider>
+          <Nav />
+          <main className="flex-1">{children}</main>
+          <CompareBar />
+          <CommandPalette />
+        </ToastProvider>
       </body>
     </html>
   )

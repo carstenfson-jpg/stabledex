@@ -157,21 +157,25 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
       label: 'Avg faults / round',
       value: stats.avgFaults != null ? aFaults.toFixed(1) : '—',
       sub: 'show jumping',
+      tooltip: 'Average faults per show jumping round across all starts. Lower is better — 0 means a clear round.',
     },
     {
       label: 'Clear rounds',
       value: stats.clearRoundPct != null ? `${aClear.toFixed(0)}%` : '—',
       sub: 'of jumping rounds',
+      tooltip: 'Percentage of show jumping rounds completed with zero faults.',
     },
     {
       label: 'Career starts',
       value: Math.round(aStarts).toString(),
       sub: 'total results',
+      tooltip: 'Total number of recorded competition results across all disciplines and levels.',
     },
     {
       label: 'Win / Top 3',
       value: stats.winRate != null ? `${aWin.toFixed(0)}% / ${aTop3.toFixed(0)}%` : '—',
       sub: 'placement rate',
+      tooltip: 'Win rate: % of starts finishing 1st. Top 3 rate: % finishing in the top 3 places.',
     },
   ]
 
@@ -220,11 +224,16 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 + i * 0.09 }}
-            className="border border-[0.5px] border-white/[.07] rounded-xl p-4 bg-[#1a1a1a]"
+            className="relative group border border-[0.5px] border-white/[.07] rounded-xl p-4 bg-[#1a1a1a]"
           >
             <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-2">{card.label}</p>
             <p className="text-2xl font-semibold text-[#f2f2f2] tabular-nums">{card.value}</p>
             <p className="text-[10px] text-[#4b5563] mt-1">{card.sub}</p>
+            {/* Tooltip */}
+            <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-[#222] border border-white/[.1] text-[11px] text-[#9ca3af] leading-relaxed opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 delay-200 z-50 shadow-xl">
+              {card.tooltip}
+              <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#222]" />
+            </div>
           </motion.div>
         ))}
       </div>
