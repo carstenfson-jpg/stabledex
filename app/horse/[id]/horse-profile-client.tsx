@@ -229,8 +229,75 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
         ))}
       </div>
 
-      {/* Stats + Chart + Details section */}
-      <div className={tab !== 'stats' ? 'hidden sm:block' : ''}>
+      {/* ── MOBILE: one section at a time via React conditional rendering ────── */}
+      <div className="sm:hidden">
+        {tab === 'stats' && (
+          <>
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {statCards.map((card) => (
+                <div key={card.label} className="border border-[0.5px] border-white/[.07] rounded-xl p-4 bg-[#1a1a1a]">
+                  <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-2">{card.label}</p>
+                  <p className="text-xl font-semibold text-[#f2f2f2] tabular-nums">{card.value}</p>
+                  <p className="text-[10px] text-[#4b5563] mt-1">{card.sub}</p>
+                </div>
+              ))}
+            </div>
+            <div className="border border-[0.5px] border-white/[.07] rounded-xl p-4 bg-[#1a1a1a] mb-4">
+              <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-4">Performance</p>
+              <PerformanceChart results={chartResults} />
+            </div>
+            <div className="border border-[0.5px] border-white/[.07] rounded-xl p-4 bg-[#1a1a1a]">
+              <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-3">Details</p>
+              <dl className="flex flex-col gap-3">
+                <Row label="Born" value={horse.date_of_birth ? new Date(horse.date_of_birth).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} />
+                <Row label="Gender" value={horse.gender ?? '—'} />
+                <Row label="Sire" value={horse.sire ?? '—'} />
+                <Row label="Dam" value={horse.dam ?? '—'} />
+                <Row label="Rider" value={horse.current_rider?.name ?? '—'} />
+                <Row label="Best level" value={stats.bestLevel ?? '—'} />
+              </dl>
+            </div>
+          </>
+        )}
+        {tab === 'strengths' && (
+          <StrengthsRadar values={stats.strengthValues} />
+        )}
+        {tab === 'results' && (
+          <>
+            <Timeline results={sortedResults} />
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-medium text-[#f2f2f2]">
+                Competition results
+                <span className="ml-2 text-xs text-[#4b5563] font-normal">{stats.totalStarts} starts</span>
+              </h2>
+            </div>
+            <div className="flex flex-col gap-2">
+              {sortedResults.map((r) => (
+                <div key={r.id} className="rounded-lg px-3 py-3 bg-[#1a1a1a] border border-[0.5px] border-white/[.07]">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-[#f2f2f2] truncate">{r.competition?.name ?? '—'}</p>
+                      <p className="text-[10px] text-[#6b7280] mt-0.5">
+                        {r.competition?.date ? new Date(r.competition.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      {r.placement != null && <p className={`text-xs font-medium ${r.placement <= 3 ? 'text-emerald-400' : 'text-[#f2f2f2]'}`}>{ordinal(r.placement)}</p>}
+                      {r.faults != null && <p className={`text-xs ${r.faults === 0 ? 'text-emerald-400' : r.faults < 8 ? 'text-[#9ca3af]' : 'text-red-400'}`}>{r.faults} faults</p>}
+                    </div>
+                  </div>
+                  {r.competition?.level && (
+                    <span className="mt-2 inline-flex items-center h-4 px-1.5 rounded-full text-[9px] bg-white/[.04] border border-[0.5px] border-white/[.08] text-[#6b7280]">{r.competition.level}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── DESKTOP: all sections always visible ─────────────────────────────── */}
+      <div className="hidden sm:block">
         {/* Stats cards row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {statCards.map((card, i) => (
@@ -242,9 +309,8 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
               className="relative group border border-[0.5px] border-white/[.07] rounded-xl p-4 bg-[#1a1a1a]"
             >
               <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-2">{card.label}</p>
-              <p className="text-xl sm:text-2xl font-semibold text-[#f2f2f2] tabular-nums">{card.value}</p>
+              <p className="text-2xl font-semibold text-[#f2f2f2] tabular-nums">{card.value}</p>
               <p className="text-[10px] text-[#4b5563] mt-1">{card.sub}</p>
-              {/* Tooltip */}
               <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-[#222] border border-white/[.1] text-[11px] text-[#9ca3af] leading-relaxed opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 delay-200 z-50 shadow-xl">
                 {card.tooltip}
                 <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#222]" />
@@ -253,7 +319,6 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
           ))}
         </div>
 
-        {/* Chart + Details */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -278,23 +343,15 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
             </dl>
           </div>
         </motion.div>
-      </div>
 
-      {/* Strengths radar */}
-      <div className={tab !== 'strengths' ? 'hidden sm:block' : ''}>
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut', delay: 0.45 }} className="mb-6">
           <StrengthsRadar values={stats.strengthValues} />
         </motion.div>
-      </div>
 
-      {/* Career timeline + Results */}
-      <div className={tab !== 'results' ? 'hidden sm:block' : ''}>
-        {/* Feature 11: Career timeline */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut', delay: 0.5 }}>
           <Timeline results={sortedResults} />
         </motion.div>
 
-        {/* Results table */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut', delay: 0.55 }}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-medium text-[#f2f2f2]">
@@ -302,32 +359,7 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
               <span className="ml-2 text-xs text-[#4b5563] font-normal">{stats.totalStarts} starts</span>
             </h2>
           </div>
-
-          {/* Mobile result cards */}
-          <div className="sm:hidden flex flex-col gap-2 mb-6">
-            {sortedResults.map((r) => (
-              <div key={r.id} className="rounded-lg px-3 py-3 bg-[#1a1a1a] border border-[0.5px] border-white/[.07]">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-[#f2f2f2] truncate">{r.competition?.name ?? '—'}</p>
-                    <p className="text-[10px] text-[#6b7280] mt-0.5">
-                      {r.competition?.date ? new Date(r.competition.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    {r.placement != null && <p className={`text-xs font-medium ${r.placement <= 3 ? 'text-emerald-400' : 'text-[#f2f2f2]'}`}>{ordinal(r.placement)}</p>}
-                    {r.faults != null && <p className={`text-xs ${r.faults === 0 ? 'text-emerald-400' : r.faults < 8 ? 'text-[#9ca3af]' : 'text-red-400'}`}>{r.faults} faults</p>}
-                  </div>
-                </div>
-                {r.competition?.level && (
-                  <span className="mt-2 inline-flex items-center h-4 px-1.5 rounded-full text-[9px] bg-white/[.04] border border-[0.5px] border-white/[.08] text-[#6b7280]">{r.competition.level}</span>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop table */}
-          <div className="hidden sm:block border border-[0.5px] border-white/[.07] rounded-xl overflow-hidden bg-[#1a1a1a]">
+          <div className="border border-[0.5px] border-white/[.07] rounded-xl overflow-hidden bg-[#1a1a1a]">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -381,6 +413,7 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
           </div>
         </motion.div>
       </div>
+
     </div>
   )
 }
