@@ -66,16 +66,9 @@ export default function HeroSection() {
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.32, ease: 'easeOut' }}
-        className="flex justify-center mt-3"
+        className="flex items-center justify-center gap-2 mt-3"
       >
         <Suspense><FilterPills /></Suspense>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.33, ease: 'easeOut' }}
-        className="mt-3"
-      >
         <Suspense><AdvancedFilters /></Suspense>
       </motion.div>
 
