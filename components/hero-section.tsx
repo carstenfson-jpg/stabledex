@@ -56,17 +56,20 @@ export default function HeroSection() {
         </button>
       </motion.div>
 
+      {/* Discipline toggle — directly under search row */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.28, ease: 'easeOut' }}
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.26, ease: 'easeOut' }}
+        className="mb-3"
       >
         <Suspense><DisciplineSwitch /></Suspense>
       </motion.div>
 
+      {/* Country + advanced filters on same row */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.32, ease: 'easeOut' }}
-        className="flex items-center justify-center gap-2 mt-3"
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.32, ease: 'easeOut' }}
+        className="flex items-center justify-center gap-2"
       >
         <Suspense><FilterPills /></Suspense>
         <Suspense><AdvancedFilters /></Suspense>
