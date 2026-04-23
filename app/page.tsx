@@ -14,7 +14,7 @@ export default async function HomePage({ searchParams }: PageProps) {
   const params = await searchParams
   const q = params.q ?? ''
   const discipline = params.discipline ?? ''
-  const country = params.country ?? ''
+  const countries = params.countries?.split(',').filter(Boolean) ?? []
   const breed = params.breed ?? ''
   const ageGroup = params.ageGroup ?? ''
   const level = params.level ?? ''
@@ -73,8 +73,8 @@ export default async function HomePage({ searchParams }: PageProps) {
   if (gender) {
     query = query.eq('gender', gender)
   }
-  if (country) {
-    query = query.eq('country', country)
+  if (countries.length > 0) {
+    query = query.in('country', countries)
   }
 
   const today = new Date()

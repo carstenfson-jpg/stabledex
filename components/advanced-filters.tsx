@@ -98,7 +98,7 @@ export default function AdvancedFilters() {
   const urlAgeMin = Number(searchParams.get('ageMin') ?? 4)
   const urlAgeMax = Number(searchParams.get('ageMax') ?? 20)
   const urlMinStarts = Number(searchParams.get('minStarts') ?? 0)
-  const urlCountry = searchParams.get('country') ?? ''
+  const urlCountries = searchParams.get('countries')?.split(',').filter(Boolean) ?? []
   const levels = searchParams.get('advLevels')?.split(',').filter(Boolean) ?? []
 
   const [ageMin, setAgeMin] = useState(urlAgeMin)
@@ -129,7 +129,7 @@ export default function AdvancedFilters() {
     (urlAgeMin !== 4 || urlAgeMax !== 20 ? 1 : 0) +
     (levels.length > 0 ? 1 : 0) +
     (urlMinStarts > 0 ? 1 : 0) +
-    (urlCountry ? 1 : 0)
+    (urlCountries.length > 0 ? 1 : 0)
 
   function toggleLevel(val: string) {
     const next = levels.includes(val) ? levels.filter((l) => l !== val) : [...levels, val]
@@ -137,7 +137,7 @@ export default function AdvancedFilters() {
   }
 
   function clearAll() {
-    apply({ ageMin: null, ageMax: null, advLevels: null, minStarts: null, country: null })
+    apply({ ageMin: null, ageMax: null, advLevels: null, minStarts: null, countries: null })
   }
 
   return (
@@ -226,17 +226,33 @@ export default function AdvancedFilters() {
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-3">Country</p>
                 <div className="flex flex-col gap-1.5">
-                  {COUNTRIES.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => apply({ country: urlCountry === c ? null : c })}
-                      className={`text-left text-xs py-0.5 transition-colors ${
-                        urlCountry === c ? 'text-emerald-400' : 'text-[#6b7280] hover:text-[#9ca3af]'
-                      }`}
-                    >
-                      {urlCountry === c ? '✓ ' : ''}{c}
-                    </button>
-                  ))}
+                  <button
+                    onClick={() => apply({ countries: null })}
+                    className={`text-left text-xs py-0.5 transition-colors ${
+                      urlCountries.length === 0 ? 'text-emerald-400' : 'text-[#6b7280] hover:text-[#9ca3af]'
+                    }`}
+                  >
+                    {urlCountries.length === 0 ? '✓ ' : ''}All countries
+                  </button>
+                  {COUNTRIES.map((c) => {
+                    const active = urlCountries.includes(c)
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => {
+                          const next = active
+                            ? urlCountries.filter((x) => x !== c)
+                            : [...urlCountries, c]
+                          apply({ countries: next.length > 0 ? next.join(',') : null })
+                        }}
+                        className={`text-left text-xs py-0.5 transition-colors ${
+                          active ? 'text-emerald-400' : 'text-[#6b7280] hover:text-[#9ca3af]'
+                        }`}
+                      >
+                        {active ? '✓ ' : ''}{c}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
