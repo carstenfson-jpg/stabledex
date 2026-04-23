@@ -1,65 +1,152 @@
-import Image from "next/image";
+import { Suspense } from 'react'
+import { createClient } from '@/lib/supabase/server'
+import FilterSidebar from '@/components/filter-sidebar'
+import HorseList, { HorseListSkeleton } from '@/components/horse-list'
+import HeroSection from '@/components/hero-section'
+import StatsRow from '@/components/stats-row'
+import type { HorseWithDetails } from '@/lib/types'
 
-export default function Home() {
+interface PageProps {
+  searchParams: Promise<Record<string, string | undefined>>
+}
+
+export default async function HomePage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const q = params.q ?? ''
+  const discipline = params.discipline ?? ''
+  const country = params.country ?? ''
+  const breed = params.breed ?? ''
+  const ageGroup = params.ageGroup ?? ''
+  const level = params.level ?? ''
+  const gender = params.gender ?? ''
+  const sort = params.sort ?? 'ranking'
+
+  const supabase = await createClient()
+
+  // Fetch counts in parallel with horses query
+  const [
+    { count: horsesCount },
+    { count: resultsCount },
+    { data: countryRows },
+  ] = await Promise.all([
+    supabase.from('horses').select('*', { count: 'exact', head: true }),
+    supabase.from('results').select('*', { count: 'exact', head: true }),
+    supabase.from('horses').select('country'),
+  ])
+
+  const countriesCount = new Set((countryRows ?? []).map((h: { country: string }) => h.country)).size
+
+  let query = supabase
+    .from('horses')
+    .select(
+      `
+      id, name, breed, studbook_number, date_of_birth, gender, sire, dam,
+      country, owner, current_rider_id, created_at,
+      current_rider:riders!current_rider_id(id, name, country, fei_id),
+      results(
+        id, placement, faults, time, class_name, score, created_at,
+        rider:riders(id, name, country, fei_id),
+        competition:competitions(id, name, level, discipline, date, location, country)
+      )
+    `
+    )
+
+  if (q) {
+    query = query.or(`name.ilike.%${q}%,studbook_number.ilike.%${q}%`)
+  }
+  if (breed) {
+    query = query.eq('breed', breed)
+  }
+  if (gender) {
+    query = query.eq('gender', gender)
+  }
+  if (country) {
+    query = query.eq('country', country)
+  }
+
+  const today = new Date()
+  if (ageGroup === '4-6') {
+    const from = new Date(today.getFullYear() - 6, today.getMonth(), today.getDate())
+    const to = new Date(today.getFullYear() - 4, today.getMonth(), today.getDate())
+    query = query
+      .gte('date_of_birth', from.toISOString().slice(0, 10))
+      .lte('date_of_birth', to.toISOString().slice(0, 10))
+  } else if (ageGroup === '7-10') {
+    const from = new Date(today.getFullYear() - 10, today.getMonth(), today.getDate())
+    const to = new Date(today.getFullYear() - 7, today.getMonth(), today.getDate())
+    query = query
+      .gte('date_of_birth', from.toISOString().slice(0, 10))
+      .lte('date_of_birth', to.toISOString().slice(0, 10))
+  } else if (ageGroup === '11+') {
+    const to = new Date(today.getFullYear() - 11, today.getMonth(), today.getDate())
+    query = query.lte('date_of_birth', to.toISOString().slice(0, 10))
+  }
+
+  const { data: rawHorses } = await query
+
+  let horses = (rawHorses ?? []) as unknown as HorseWithDetails[]
+
+  const levelMap: Record<string, string[]> = {
+    gp5: ['CSI5*', 'GP', 'CDIO5*', 'CCI4*'],
+    csi4: ['CSI4*', 'CDI4*'],
+    csi3: ['CSI3*', 'CDI3*', 'CCI3*'],
+    csi21: ['CSI1*', 'CSI2*', 'CDI1*', 'CDI2*', 'CCI1*', 'CCI2*'],
+    young: ['CSI-YH', 'YH', 'Young Horse'],
+  }
+  if (level && levelMap[level]) {
+    const allowed = new Set(levelMap[level])
+    horses = horses.filter((h) =>
+      h.results.some((r) => r.competition && allowed.has(r.competition.level))
+    )
+  }
+
+  if (discipline) {
+    horses = horses.filter((h) =>
+      h.results.some((r) => r.competition?.discipline === discipline)
+    )
+  }
+
+  if (sort === 'name') {
+    horses = [...horses].sort((a, b) => a.name.localeCompare(b.name))
+  } else if (sort === 'recent') {
+    horses = [...horses].sort((a, b) => {
+      const aDate = [...a.results].map((r) => r.competition?.date ?? '').sort().reverse()[0] ?? ''
+      const bDate = [...b.results].map((r) => r.competition?.date ?? '').sort().reverse()[0] ?? ''
+      return bDate.localeCompare(aDate)
+    })
+  } else {
+    horses = [...horses].sort((a, b) => {
+      const placements = (h: HorseWithDetails) =>
+        h.results.map((r) => r.placement).filter((p): p is number => p != null)
+      const aBest = placements(a).length > 0 ? Math.min(...placements(a)) : 999
+      const bBest = placements(b).length > 0 ? Math.min(...placements(b)) : 999
+      return aBest - bBest
+    })
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <HeroSection />
+
+      <StatsRow
+        horses={horsesCount ?? 0}
+        results={resultsCount ?? 0}
+        countries={countriesCount}
+      />
+
+      {/* Two-column layout */}
+      <div className="flex gap-8">
+        <div className="w-48 shrink-0">
+          <Suspense>
+            <FilterSidebar />
+          </Suspense>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="flex-1 min-w-0">
+          <Suspense fallback={<HorseListSkeleton />}>
+            <HorseList horses={horses} total={horses.length} />
+          </Suspense>
         </div>
-      </main>
+      </div>
     </div>
-  );
+  )
 }
