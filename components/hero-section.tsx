@@ -33,15 +33,18 @@ export default function HeroSection() {
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.20, ease: 'easeOut' }}
-        className="flex items-center justify-center gap-2 mb-4"
+        className="flex items-center justify-center gap-2 mb-4 w-full"
       >
         <Suspense><SearchBar /></Suspense>
-        <FindMatch />
+        {/* Find a match — desktop only */}
+        <div className="hidden sm:block shrink-0">
+          <FindMatch />
+        </div>
         {/* Mobile filter toggle */}
         <button
           onClick={() => setFilterSheetOpen(true)}
           className="sm:hidden flex items-center justify-center rounded-lg bg-[#1a1a1a] border border-[0.5px] border-white/[.08] text-[#6b7280] hover:text-[#f2f2f2] transition-colors shrink-0"
-          style={{ minWidth: 44, minHeight: 44 }}
+          style={{ width: 44, height: 44 }}
           aria-label="Open filters"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">

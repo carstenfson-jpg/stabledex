@@ -48,29 +48,30 @@ export default function HorseCard({
         {isSelected && <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><polyline points="1,4 3,6 7,2" stroke="#0f0f0f" strokeWidth="1.5" strokeLinecap="round"/></svg>}
       </button>
 
-      <Link href={`/horse/${id}`} className="flex items-center gap-4 flex-1 min-w-0 cursor-pointer">
+      <Link href={`/horse/${id}`} className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
         <HorseIcon tier={tier} active={hovered} />
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
             <span
-              className="text-sm font-medium max-w-[120px] sm:max-w-none truncate transition-colors duration-150"
+              className="text-sm font-medium truncate transition-colors duration-150"
               style={{ color: hovered ? '#ffffff' : '#f2f2f2' }}
             >
               {name}
             </span>
-            <span className="hidden sm:inline-flex"><Badge label={breed} /></span>
-            <Badge label={discipline} accent />
+            <span className="hidden sm:inline-flex shrink-0"><Badge label={breed} /></span>
+            <span className="shrink-0"><Badge label={discipline} accent /></span>
           </div>
-          <p className="text-xs text-[#6b7280] mt-0.5">
+          <p className="text-xs text-[#6b7280] mt-0.5 truncate">
             {riderName}
             {riderCountry && (
-              <span className="ml-1.5">{getCountryFlag(riderCountry)} {riderCountry}</span>
+              <span className="ml-1.5 hidden sm:inline">{getCountryFlag(riderCountry)} {riderCountry}</span>
             )}
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Stat — desktop only */}
+        <div className="hidden sm:flex items-center gap-3 shrink-0">
           {sparkline && sparkline.length >= 3 && <Sparkline values={sparkline} />}
           <div className="text-right">
             <p className="text-sm font-medium text-[#f2f2f2] tabular-nums">{stat}</p>
