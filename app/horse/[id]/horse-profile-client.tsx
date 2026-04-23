@@ -219,7 +219,7 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
       </motion.div>
 
       {/* Mobile tab bar */}
-      <div className="flex border-b border-white/[.07] mb-6 sm:hidden -mx-6 px-6">
+      <div className="flex border-b border-white/[.07] mb-6 sm:hidden -mx-4 px-4">
         {(['stats', 'results', 'strengths'] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 h-10 text-xs capitalize transition-colors border-b-2 -mb-px ${
@@ -262,9 +262,7 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
         >
           <div className="md:col-span-2 border border-[0.5px] border-white/[.07] rounded-xl p-5 bg-[#1a1a1a]">
             <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-4">Performance</p>
-            <div className="hidden sm:block">
-              <PerformanceChart results={chartResults} />
-            </div>
+            <PerformanceChart results={chartResults} />
           </div>
           <div className="border border-[0.5px] border-white/[.07] rounded-xl p-5 bg-[#1a1a1a]">
             <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-4">Details</p>
