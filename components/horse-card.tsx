@@ -32,7 +32,7 @@ export default function HorseCard({
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex items-center gap-4 px-4 py-3.5 hover:bg-white/[.04] transition-all duration-150 ease-out border-b border-[0.5px] border-white/[.06] last:border-0 group"
+      className="flex items-center gap-4 px-3 py-3 sm:px-4 sm:py-3.5 hover:bg-white/[.04] transition-all duration-150 ease-out border-b border-[0.5px] border-white/[.06] last:border-0 group"
     >
       <span className="text-sm text-[#4b5563] w-7 shrink-0 tabular-nums">{rank}</span>
 
@@ -54,12 +54,12 @@ export default function HorseCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span
-              className="text-sm font-medium truncate transition-colors duration-150"
+              className="text-sm font-medium max-w-[120px] sm:max-w-none truncate transition-colors duration-150"
               style={{ color: hovered ? '#ffffff' : '#f2f2f2' }}
             >
               {name}
             </span>
-            <Badge label={breed} />
+            <span className="hidden sm:inline-flex"><Badge label={breed} /></span>
             <Badge label={discipline} accent />
           </div>
           <p className="text-xs text-[#6b7280] mt-0.5">

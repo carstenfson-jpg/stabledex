@@ -145,6 +145,8 @@ function Timeline({ results }: { results: ResultRow[] }) {
 }
 
 export default function HorseProfileClient({ horse, stats, discipline, sortedResults }: Props) {
+  const [tab, setTab] = useState<'stats' | 'results' | 'strengths'>('stats')
+
   // Feature 5: animated stat values
   const aFaults = useCountUp(stats.avgFaults ?? 0, 0)
   const aClear = useCountUp(stats.clearRoundPct ?? 0, 100)
@@ -216,125 +218,171 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
         </div>
       </motion.div>
 
-      {/* Stats cards row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        {statCards.map((card, i) => (
-          <motion.div
-            key={card.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 + i * 0.09 }}
-            className="relative group border border-[0.5px] border-white/[.07] rounded-xl p-4 bg-[#1a1a1a]"
-          >
-            <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-2">{card.label}</p>
-            <p className="text-2xl font-semibold text-[#f2f2f2] tabular-nums">{card.value}</p>
-            <p className="text-[10px] text-[#4b5563] mt-1">{card.sub}</p>
-            {/* Tooltip */}
-            <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-[#222] border border-white/[.1] text-[11px] text-[#9ca3af] leading-relaxed opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 delay-200 z-50 shadow-xl">
-              {card.tooltip}
-              <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#222]" />
-            </div>
-          </motion.div>
+      {/* Mobile tab bar */}
+      <div className="flex border-b border-white/[.07] mb-6 sm:hidden -mx-6 px-6">
+        {(['stats', 'results', 'strengths'] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`flex-1 h-10 text-xs capitalize transition-colors border-b-2 -mb-px ${
+              tab === t ? 'border-emerald-500 text-[#f2f2f2]' : 'border-transparent text-[#6b7280]'
+            }`}
+          >{t}</button>
         ))}
       </div>
 
-      {/* Chart + Details */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut', delay: 0.38 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
-      >
-        <div className="md:col-span-2 border border-[0.5px] border-white/[.07] rounded-xl p-5 bg-[#1a1a1a]">
-          <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-4">Performance</p>
-          <PerformanceChart results={chartResults} />
+      {/* Stats + Chart + Details section */}
+      <div className={tab !== 'stats' ? 'hidden sm:block' : ''}>
+        {/* Stats cards row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          {statCards.map((card, i) => (
+            <motion.div
+              key={card.label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 + i * 0.09 }}
+              className="relative group border border-[0.5px] border-white/[.07] rounded-xl p-4 bg-[#1a1a1a]"
+            >
+              <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-2">{card.label}</p>
+              <p className="text-xl sm:text-2xl font-semibold text-[#f2f2f2] tabular-nums">{card.value}</p>
+              <p className="text-[10px] text-[#4b5563] mt-1">{card.sub}</p>
+              {/* Tooltip */}
+              <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-[#222] border border-white/[.1] text-[11px] text-[#9ca3af] leading-relaxed opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 delay-200 z-50 shadow-xl">
+                {card.tooltip}
+                <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#222]" />
+              </div>
+            </motion.div>
+          ))}
         </div>
-        <div className="border border-[0.5px] border-white/[.07] rounded-xl p-5 bg-[#1a1a1a]">
-          <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-4">Details</p>
-          <dl className="flex flex-col gap-3">
-            <Row label="Studbook" value={horse.studbook_number ?? '—'} />
-            <Row label="Born" value={horse.date_of_birth ? new Date(horse.date_of_birth).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} />
-            <Row label="Gender" value={horse.gender ?? '—'} />
-            <Row label="Sire" value={horse.sire ?? '—'} />
-            <Row label="Dam" value={horse.dam ?? '—'} />
-            <Row label="Rider" value={horse.current_rider?.name ?? '—'} />
-            <Row label="Owner" value={horse.owner ?? '—'} />
-            <Row label="Best level" value={stats.bestLevel ?? '—'} />
-          </dl>
-        </div>
-      </motion.div>
+
+        {/* Chart + Details */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, ease: 'easeOut', delay: 0.38 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
+        >
+          <div className="md:col-span-2 border border-[0.5px] border-white/[.07] rounded-xl p-5 bg-[#1a1a1a]">
+            <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-4">Performance</p>
+            <div className="hidden sm:block">
+              <PerformanceChart results={chartResults} />
+            </div>
+          </div>
+          <div className="border border-[0.5px] border-white/[.07] rounded-xl p-5 bg-[#1a1a1a]">
+            <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-4">Details</p>
+            <dl className="flex flex-col gap-3">
+              <Row label="Studbook" value={horse.studbook_number ?? '—'} />
+              <Row label="Born" value={horse.date_of_birth ? new Date(horse.date_of_birth).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} />
+              <Row label="Gender" value={horse.gender ?? '—'} />
+              <Row label="Sire" value={horse.sire ?? '—'} />
+              <Row label="Dam" value={horse.dam ?? '—'} />
+              <Row label="Rider" value={horse.current_rider?.name ?? '—'} />
+              <Row label="Owner" value={horse.owner ?? '—'} />
+              <Row label="Best level" value={stats.bestLevel ?? '—'} />
+            </dl>
+          </div>
+        </motion.div>
+      </div>
 
       {/* Strengths radar */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut', delay: 0.45 }} className="mb-6">
-        <StrengthsRadar values={stats.strengthValues} />
-      </motion.div>
+      <div className={tab !== 'strengths' ? 'hidden sm:block' : ''}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut', delay: 0.45 }} className="mb-6">
+          <StrengthsRadar values={stats.strengthValues} />
+        </motion.div>
+      </div>
 
-      {/* Feature 11: Career timeline */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut', delay: 0.5 }}>
-        <Timeline results={sortedResults} />
-      </motion.div>
+      {/* Career timeline + Results */}
+      <div className={tab !== 'results' ? 'hidden sm:block' : ''}>
+        {/* Feature 11: Career timeline */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut', delay: 0.5 }}>
+          <Timeline results={sortedResults} />
+        </motion.div>
 
-      {/* Results table */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut', delay: 0.55 }}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-[#f2f2f2]">
-            Competition results
-            <span className="ml-2 text-xs text-[#4b5563] font-normal">{stats.totalStarts} starts</span>
-          </h2>
-        </div>
-        <div className="border border-[0.5px] border-white/[.07] rounded-xl overflow-hidden bg-[#1a1a1a]">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[0.5px] border-white/[.07]">
-                  <Th>Date</Th><Th>Competition</Th><Th>Level</Th><Th>Faults</Th><Th>Result</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedResults.length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-xs text-[#4b5563]">No results.</td></tr>
-                ) : (
-                  sortedResults.map((r, i) => (
-                    <motion.tr
-                      key={r.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.25, ease: 'easeOut', delay: Math.min(i, 12) * 0.03 + 0.55 }}
-                      className="border-t border-[0.5px] border-white/[.05] hover:bg-white/[.02] transition-colors"
-                    >
-                      <td className="px-4 py-3 text-xs text-[#6b7280] whitespace-nowrap tabular-nums">
-                        {r.competition?.date ? new Date(r.competition.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-[#f2f2f2] whitespace-nowrap">{r.competition?.name ?? '—'}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] bg-white/[.04] border border-[0.5px] border-white/[.08] text-[#6b7280]">
-                          {r.competition?.level ?? '—'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs font-medium tabular-nums whitespace-nowrap">
-                        {r.faults != null ? (
-                          <span className={r.faults === 0 ? 'text-emerald-400' : r.faults < 8 ? 'text-[#9ca3af]' : 'text-red-400'}>{r.faults}</span>
-                        ) : r.score != null ? (
-                          <span className="text-[#9ca3af]">{r.score.toFixed(3)}%</span>
-                        ) : (
-                          <span className="text-[#4b5563]">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-xs font-medium tabular-nums whitespace-nowrap">
-                        {r.placement ? (
-                          <span className={r.placement <= 3 ? 'text-emerald-400' : 'text-[#f2f2f2]'}>{ordinal(r.placement)}</span>
-                        ) : (
-                          <span className="text-[#4b5563]">—</span>
-                        )}
-                      </td>
-                    </motion.tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+        {/* Results table */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut', delay: 0.55 }}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-[#f2f2f2]">
+              Competition results
+              <span className="ml-2 text-xs text-[#4b5563] font-normal">{stats.totalStarts} starts</span>
+            </h2>
           </div>
-        </div>
-      </motion.div>
+
+          {/* Mobile result cards */}
+          <div className="sm:hidden flex flex-col gap-2 mb-6">
+            {sortedResults.map((r) => (
+              <div key={r.id} className="rounded-lg px-3 py-3 bg-[#1a1a1a] border border-[0.5px] border-white/[.07]">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-[#f2f2f2] truncate">{r.competition?.name ?? '—'}</p>
+                    <p className="text-[10px] text-[#6b7280] mt-0.5">
+                      {r.competition?.date ? new Date(r.competition.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {r.placement != null && <p className={`text-xs font-medium ${r.placement <= 3 ? 'text-emerald-400' : 'text-[#f2f2f2]'}`}>{ordinal(r.placement)}</p>}
+                    {r.faults != null && <p className={`text-xs ${r.faults === 0 ? 'text-emerald-400' : r.faults < 8 ? 'text-[#9ca3af]' : 'text-red-400'}`}>{r.faults} faults</p>}
+                  </div>
+                </div>
+                {r.competition?.level && (
+                  <span className="mt-2 inline-flex items-center h-4 px-1.5 rounded-full text-[9px] bg-white/[.04] border border-[0.5px] border-white/[.08] text-[#6b7280]">{r.competition.level}</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block border border-[0.5px] border-white/[.07] rounded-xl overflow-hidden bg-[#1a1a1a]">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[0.5px] border-white/[.07]">
+                    <Th>Date</Th><Th>Competition</Th><Th>Level</Th><Th>Faults</Th><Th>Result</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedResults.length === 0 ? (
+                    <tr><td colSpan={5} className="px-4 py-8 text-center text-xs text-[#4b5563]">No results.</td></tr>
+                  ) : (
+                    sortedResults.map((r, i) => (
+                      <motion.tr
+                        key={r.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25, ease: 'easeOut', delay: Math.min(i, 12) * 0.03 + 0.55 }}
+                        className="border-t border-[0.5px] border-white/[.05] hover:bg-white/[.02] transition-colors"
+                      >
+                        <td className="px-4 py-3 text-xs text-[#6b7280] whitespace-nowrap tabular-nums">
+                          {r.competition?.date ? new Date(r.competition.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-[#f2f2f2] whitespace-nowrap">{r.competition?.name ?? '—'}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] bg-white/[.04] border border-[0.5px] border-white/[.08] text-[#6b7280]">
+                            {r.competition?.level ?? '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs font-medium tabular-nums whitespace-nowrap">
+                          {r.faults != null ? (
+                            <span className={r.faults === 0 ? 'text-emerald-400' : r.faults < 8 ? 'text-[#9ca3af]' : 'text-red-400'}>{r.faults}</span>
+                          ) : r.score != null ? (
+                            <span className="text-[#9ca3af]">{r.score.toFixed(3)}%</span>
+                          ) : (
+                            <span className="text-[#4b5563]">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs font-medium tabular-nums whitespace-nowrap">
+                          {r.placement ? (
+                            <span className={r.placement <= 3 ? 'text-emerald-400' : 'text-[#f2f2f2]'}>{ordinal(r.placement)}</span>
+                          ) : (
+                            <span className="text-[#4b5563]">—</span>
+                          )}
+                        </td>
+                      </motion.tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </div>
   )
 }

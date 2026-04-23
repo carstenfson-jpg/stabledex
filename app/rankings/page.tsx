@@ -54,9 +54,9 @@ export default async function RankingsPage({ searchParams }: PageProps) {
   const liveCount = rows.filter((r) => liveHorseIds.has(r.horse_id)).length
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="flex items-center gap-3 mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-[#f2f2f2]">Rankings</h1>
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#f2f2f2]">Rankings</h1>
         {liveCount > 0 && (
           <span className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/[.08] border border-[0.5px] border-emerald-500/20 rounded-full px-2.5 py-1">
             <span className="relative flex h-1.5 w-1.5">
@@ -136,10 +136,10 @@ function RankingCard({ row, rank, movement, isLive }: { row: RankingRow; rank: n
           </p>
         </div>
 
-        <div className="flex items-center gap-6 shrink-0">
-          <Stat label="Wins" value={row.wins.toString()} />
-          <Stat label="Top 3" value={row.top3.toString()} />
-          <Stat label="Starts" value={row.starts.toString()} />
+        <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+          <div className="hidden sm:block"><Stat label="Wins" value={row.wins.toString()} /></div>
+          <div className="hidden sm:block"><Stat label="Top 3" value={row.top3.toString()} /></div>
+          <div className="hidden sm:block"><Stat label="Starts" value={row.starts.toString()} /></div>
           <Stat label="Points" value={row.points.toString()} highlight />
         </div>
       </div>

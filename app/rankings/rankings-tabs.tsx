@@ -42,7 +42,7 @@ export default function RankingsTabs({ period }: Props) {
   return (
     <div className="flex flex-col gap-4">
       {/* Period tabs */}
-      <div className="flex gap-0 border border-[0.5px] border-white/[.07] rounded-lg overflow-hidden w-fit">
+      <div className="flex gap-0 border border-[0.5px] border-white/[.07] rounded-lg overflow-x-auto no-scrollbar w-full sm:w-fit">
         {PERIOD_OPTIONS.map((opt) => (
           <button
             key={opt.value}
@@ -59,7 +59,7 @@ export default function RankingsTabs({ period }: Props) {
       </div>
 
       {/* Filter row */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <FilterSelect
           label="All disciplines"
           value={discipline}
@@ -98,7 +98,7 @@ function FilterSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-7 pl-3 pr-7 bg-[#1a1a1a] border border-[0.5px] border-white/[.08] rounded-md text-xs text-[#9ca3af] outline-none appearance-none cursor-pointer hover:border-white/20 transition-colors"
+      className="w-full sm:w-auto h-10 sm:h-7 pl-3 pr-7 bg-[#1a1a1a] border border-[0.5px] border-white/[.08] rounded-md text-xs text-[#9ca3af] outline-none appearance-none cursor-pointer hover:border-white/20 transition-colors"
     >
       <option value="">{label}</option>
       {options.map((o) => (

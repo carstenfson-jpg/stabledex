@@ -43,7 +43,7 @@ export default function FilterSidebar() {
   const gender = searchParams.get('gender') ?? ''
 
   return (
-    <aside className="flex flex-col gap-6">
+    <aside className="hidden md:flex flex-col gap-6">
       <Section label="Breed">
         <Option label="All breeds" active={!breed} onClick={() => set('breed', breed)} />
         {BREEDS.map((b) => (

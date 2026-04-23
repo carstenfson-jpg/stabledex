@@ -99,3 +99,6 @@ input[type='range'].sd-range.sd-range-dual::-webkit-slider-thumb {
   animation: shimmer 1.4s linear infinite;
   border-radius: 4px;
 }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
