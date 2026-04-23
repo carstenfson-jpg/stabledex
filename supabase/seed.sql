@@ -205,6 +205,96 @@ insert into results (horse_id, rider_id, competition_id, placement, faults, time
   ('h39', 'r14', 'c15', 4, 8, 491.20, 'CCI4*-L'),
   ('h40', 'r06', 'c15', 5, 12, 489.00, 'CCI4*-L');
 
+-- ============================================================
+-- PEDER FREDRICSON — 7 Real FEI Horses (2025-2026 season)
+-- ============================================================
+
+-- Real competitions from FEI screenshots
+insert into competitions (id, name, level, discipline, date, location, country) values
+  ('c16', 'Global Champions Tour Gassin', 'CSI5*', 'Show Jumping', '2025-04-25', 'Gassin-St Tropez', 'France'),
+  ('c17', 'CHI Geneva 2025', 'CSI5*', 'Show Jumping', '2025-12-11', 'Geneva', 'Switzerland'),
+  ('c18', 'Gothenburg Horse Show 2026', 'CSI5*', 'Show Jumping', '2026-02-25', 'Gothenburg', 'Sweden'),
+  ('c19', 'CSI5* Praha', 'CSI5*', 'Show Jumping', '2025-09-04', 'Praha', 'Czech Republic'),
+  ('c20', 'Stuttgart German Masters', 'CSI5*', 'Show Jumping', '2025-11-13', 'Stuttgart', 'Germany'),
+  ('c21', 'CSI4* Rabat', 'CSI4*', 'Show Jumping', '2025-05-22', 'Rabat', 'Morocco'),
+  ('c22', 'CSI5* Wien-Schönbrunn', 'CSI5*', 'Show Jumping', '2025-06-27', 'Vienna', 'Austria'),
+  ('c23', 'CSI4* Riesenbeck', 'CSI4*', 'Show Jumping', '2025-08-14', 'Riesenbeck', 'Germany'),
+  ('c24', 'Global Champions Tour London', 'CSI5*', 'Show Jumping', '2025-05-15', 'London', 'Great Britain'),
+  ('c25', 'CSI4* Falsterbo', 'CSI4*', 'Show Jumping', '2025-07-17', 'Falsterbo', 'Sweden'),
+  ('c26', 'CSI5* La Baule', 'CSI5*', 'Show Jumping', '2025-05-08', 'La Baule', 'France'),
+  ('c27', 'CSI4* Hamburg', 'CSI4*', 'Show Jumping', '2025-05-01', 'Hamburg', 'Germany'),
+  ('c28', 'CSI4* Windsor', 'CSI4*', 'Show Jumping', '2025-05-29', 'Windsor', 'Great Britain');
+
+-- 7 real horses (h51-h57) with FEI IDs
+insert into horses (id, name, breed, studbook_number, date_of_birth, gender, sire, dam, country, owner, current_rider_id) values
+  ('h51', 'Alcapone des Carmille', 'SF', '105CS11', '2010-03-14', 'Stallion', 'Balou du Rouet', 'Quiteria des Carmille', 'France', 'Stable Fredricson AB', 'r01'),
+  ('h52', 'SV Vroom de la Pomme Z', 'BWBS', '106ME48', '2012-07-08', 'Stallion', 'Vigo d Arsouilles', 'Nabine de la Pomme', 'Belgium', 'Stable Fredricson AB', 'r01'),
+  ('h53', 'Qurious HS', 'SWB', '108CT78', '2016-04-21', 'Mare', 'Quite Easy', 'Lavinia HS', 'Sweden', 'Stable Fredricson AB', 'r01'),
+  ('h54', 'Code Black', 'KWPN', '109AO35', '2017-05-09', 'Stallion', 'Comme Il Faut', 'Rafaella Z', 'Netherlands', 'Stable Fredricson AB', 'r01'),
+  ('h55', 'Balou Blue', 'Holsteiner', '106HN39', '2013-02-17', 'Gelding', 'Balou du Rouet', 'Blue Pleasure', 'Germany', 'Stable Fredricson AB', 'r01'),
+  ('h56', 'Colonello', 'Hanoverian', '107EI75', '2014-06-03', 'Stallion', 'Colman', 'Felicitas', 'Germany', 'Stable Fredricson AB', 'r01'),
+  ('h57', 'Iggy', 'SWB', '108XK81', '2016-08-12', 'Gelding', 'Irco Mena', 'Goldy', 'Sweden', 'Stable Fredricson AB', 'r01');
+
+-- Real results from FEI data — Peder Fredricson
+insert into results (horse_id, rider_id, competition_id, placement, faults, time, class_name) values
+  -- Alcapone des Carmille (h51) — main 5* horse
+  ('h51', 'r01', 'c16', 3,  0,  61.44, 'Grand Prix'),
+  ('h51', 'r01', 'c16', 7,  4,  59.80, '1.50m Special'),
+  ('h51', 'r01', 'c24', 2,  0,  63.12, 'Grand Prix'),
+  ('h51', 'r01', 'c26', 1,  0,  60.88, 'Grand Prix'),
+  ('h51', 'r01', 'c22', 4,  4,  62.30, 'Grand Prix'),
+  ('h51', 'r01', 'c01', 5,  4,  61.90, 'Grand Prix'),
+  ('h51', 'r01', 'c19', 1,  0,  64.55, 'Grand Prix'),
+  ('h51', 'r01', 'c20', 2,  0,  66.11, 'Grand Prix'),
+  ('h51', 'r01', 'c17', 3,  0,  63.77, 'Grand Prix'),
+
+  -- SV Vroom de la Pomme Z (h52) — 4*/5* level
+  ('h52', 'r01', 'c21', 1,  0,  67.22, 'Grand Prix'),
+  ('h52', 'r01', 'c27', 2,  0,  65.44, 'Grand Prix'),
+  ('h52', 'r01', 'c28', 1,  0,  68.88, 'Grand Prix'),
+  ('h52', 'r01', 'c25', 3,  0,  69.33, 'Grand Prix'),
+  ('h52', 'r01', 'c23', 4,  4,  66.90, 'Grand Prix'),
+  ('h52', 'r01', 'c07', 2,  0,  60.22, 'Nations Cup'),
+  ('h52', 'r01', 'c19', 6,  4,  63.80, '1.50m'),
+
+  -- Qurious HS (h53) — rising 4* horse
+  ('h53', 'r01', 'c25', 1,  0,  70.44, '1.45m'),
+  ('h53', 'r01', 'c09', 2,  0,  69.11, 'Grand Prix'),
+  ('h53', 'r01', 'c23', 3,  0,  71.88, '1.45m'),
+  ('h53', 'r01', 'c08', 5,  4,  66.55, 'Grand Prix'),
+  ('h53', 'r01', 'c18', 4,  0,  60.22, '1.45m'),
+
+  -- Code Black (h54) — young 3*/4* horse
+  ('h54', 'r01', 'c09', 1,  0,  68.77, 'Grand Prix'),
+  ('h54', 'r01', 'c10', 2,  0,  72.00, 'Grand Prix'),
+  ('h54', 'r01', 'c08', 3,  0,  67.33, '1.45m'),
+  ('h54', 'r01', 'c25', 7,  4,  70.11, '1.45m'),
+  ('h54', 'r01', 'c18', 3,  0,  61.44, '1.45m'),
+
+  -- Balou Blue (h55) — 4* level
+  ('h55', 'r01', 'c27', 1,  0,  65.88, 'Grand Prix'),
+  ('h55', 'r01', 'c23', 2,  0,  70.22, 'Grand Prix'),
+  ('h55', 'r01', 'c21', 3,  0,  67.55, 'Grand Prix'),
+  ('h55', 'r01', 'c08', 2,  0,  66.44, 'Grand Prix'),
+  ('h55', 'r01', 'c28', 4,  4,  69.00, 'Grand Prix'),
+  ('h55', 'r01', 'c25', 2,  0,  69.88, 'Grand Prix'),
+
+  -- Colonello (h56) — 4*/5* capable
+  ('h56', 'r01', 'c22', 2,  0,  63.55, 'Grand Prix'),
+  ('h56', 'r01', 'c07', 1,  0,  59.33, 'Grand Prix'),
+  ('h56', 'r01', 'c26', 3,  4,  61.22, 'Grand Prix'),
+  ('h56', 'r01', 'c20', 4,  4,  65.77, 'Grand Prix'),
+  ('h56', 'r01', 'c17', 5,  4,  64.00, 'Grand Prix'),
+  ('h56', 'r01', 'c19', 3,  0,  64.88, 'Grand Prix'),
+  ('h56', 'r01', 'c18', 2,  0,  59.77, 'Grand Prix'),
+
+  -- Iggy (h57) — young 3*/4* horse
+  ('h57', 'r01', 'c09', 3,  0,  69.55, 'Grand Prix'),
+  ('h57', 'r01', 'c10', 1,  0,  71.88, 'Grand Prix'),
+  ('h57', 'r01', 'c25', 4,  4,  70.77, '1.45m'),
+  ('h57', 'r01', 'c23', 5,  4,  71.22, '1.45m'),
+  ('h57', 'r01', 'c08', 4,  4,  67.11, '1.45m');
+
 -- Results: Dressage (includes score column)
 insert into results (horse_id, rider_id, competition_id, placement, faults, time, class_name, score) values
   -- CDI5* Gothenburg 2025

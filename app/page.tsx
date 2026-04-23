@@ -153,7 +153,7 @@ export default async function HomePage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <HeroSection />
 
       <StatsRow
@@ -162,9 +162,9 @@ export default async function HomePage({ searchParams }: PageProps) {
         countries={countriesCount}
       />
 
-      {/* Two-column layout */}
+      {/* Two-column layout — sidebar hidden on mobile */}
       <div className="flex gap-8">
-        <div className="w-48 shrink-0">
+        <div className="hidden md:block w-48 shrink-0">
           <Suspense>
             <FilterSidebar />
           </Suspense>
