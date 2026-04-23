@@ -47,21 +47,21 @@ function useAnimatedPlaceholder(active: boolean) {
           rafRef.current = setTimeout(tick, 1600) // pause at end
           return
         }
-        rafRef.current = setTimeout(tick, 75)
+        rafRef.current = setTimeout(tick, 45)
       } else {
         charIdx.current -= 1
         setDisplay(phrase.slice(0, charIdx.current))
         if (charIdx.current <= 0) {
           deleting.current = false
           phraseIdx.current = (phraseIdx.current + 1) % PLACEHOLDER_PHRASES.length
-          rafRef.current = setTimeout(tick, 400) // pause before next
+          rafRef.current = setTimeout(tick, 260) // pause before next
           return
         }
-        rafRef.current = setTimeout(tick, 32)
+        rafRef.current = setTimeout(tick, 18)
       }
     }
 
-    rafRef.current = setTimeout(tick, 900)
+    rafRef.current = setTimeout(tick, 600)
     return () => { if (rafRef.current) clearTimeout(rafRef.current) }
   }, [active])
 
