@@ -56,7 +56,16 @@ export default async function HomePage({ searchParams }: PageProps) {
     )
 
   if (q) {
-    query = query.or(`name.ilike.%${q}%,studbook_number.ilike.%${q}%`)
+    const { data: matchingRiders } = await supabase
+      .from('riders')
+      .select('id')
+      .ilike('name', `%${q}%`)
+    const riderIds = (matchingRiders ?? []).map((r: { id: string }) => r.id)
+    let orFilter = `name.ilike.%${q}%,studbook_number.ilike.%${q}%`
+    if (riderIds.length > 0) {
+      orFilter += `,current_rider_id.in.(${riderIds.join(',')})`
+    }
+    query = query.or(orFilter)
   }
   if (breed) {
     query = query.eq('breed', breed)
