@@ -7,12 +7,21 @@ import FindMatch from './find-match'
 import FilterPills from './filter-pills'
 import AdvancedFilters from './advanced-filters'
 import FilterSheet from './filter-sheet'
+import DisciplineSwitch from './discipline-switch'
 
 export default function HeroSection() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
   return (
     <div className="mb-6 mx-auto text-center" style={{ maxWidth: 640 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.03, ease: 'easeOut' }}
+        className="flex justify-center mb-6"
+      >
+        <Suspense><DisciplineSwitch /></Suspense>
+      </motion.div>
+
       <motion.p
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.05, ease: 'easeOut' }}

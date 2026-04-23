@@ -1,26 +1,15 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { COUNTRIES, DISCIPLINES } from '@/lib/types'
+import { useEffect, useRef, useState } from 'react'
+import { COUNTRIES } from '@/lib/types'
 
 export default function FilterPills() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const discipline = searchParams.get('discipline') ?? ''
   const country = searchParams.get('country') ?? ''
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  const toggle = useCallback(
-    (key: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString())
-      if (params.get(key) === value) params.delete(key)
-      else params.set(key, value)
-      router.push(`/?${params.toString()}`)
-    },
-    [router, searchParams]
-  )
 
   function setCountry(c: string) {
     const params = new URLSearchParams(searchParams.toString())
@@ -30,7 +19,6 @@ export default function FilterPills() {
     setDropdownOpen(false)
   }
 
-  // Close on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -42,31 +30,7 @@ export default function FilterPills() {
   }, [])
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      {/* Discipline pills */}
-      {DISCIPLINES.map((d) => (
-        <Pill
-          key={d}
-          label={d}
-          active={discipline === d}
-          onClick={() => toggle('discipline', d)}
-        />
-      ))}
-      {discipline && (
-        <Pill
-          label="All"
-          active={false}
-          onClick={() => {
-            const params = new URLSearchParams(searchParams.toString())
-            params.delete('discipline')
-            router.push(`/?${params.toString()}`)
-          }}
-        />
-      )}
-
-      {/* Separator */}
-      <div className="w-px h-4 bg-white/10 shrink-0" />
-
+    <div className="flex items-center gap-2">
       {/* Country dropdown */}
       <div ref={dropdownRef} className="relative">
         <button
