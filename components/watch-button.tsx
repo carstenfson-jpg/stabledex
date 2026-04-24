@@ -28,7 +28,7 @@ export default function WatchButton({ horseId }: { horseId: string }) {
   return (
     <button
       onClick={toggle.bind(null, horseId)}
-      className={`flex items-center gap-1.5 h-7 px-3 rounded-md border border-[0.5px] text-xs transition-all duration-150 ${
+      className={`flex items-center gap-1.5 h-7 px-3 rounded-md border border-[0.5px] text-xs transition-all duration-150 whitespace-nowrap shrink-0 ${
         watching
           ? 'bg-emerald-500/[.08] border-emerald-500/30 text-emerald-400'
           : 'bg-transparent border-white/[.1] text-[#6b7280] hover:text-[#f2f2f2] hover:border-white/20'

@@ -80,7 +80,7 @@ function CopyLinkButton() {
   return (
     <button
       onClick={copy}
-      className="flex items-center gap-1.5 text-xs text-[#4b5563] hover:text-[#9ca3af] transition-colors"
+      className="flex items-center gap-1.5 text-xs text-[#4b5563] hover:text-[#9ca3af] transition-colors whitespace-nowrap"
     >
       {copied ? (
         <span className="text-emerald-400">✓ Copied</span>
@@ -303,22 +303,24 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
             <Badge accent>{discipline}</Badge>
             {horse.country && <span className="text-sm text-[#6b7280]">{getCountryFlag(horse.country)} {horse.country}</span>}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-x-3 gap-y-2 flex-wrap">
             <p className="text-sm text-[#6b7280]">
               {horse.gender}
               {stats.age ? ` · ${stats.age} years old` : ''}
               {horse.current_rider && (
                 <>
                   {' · '}
-                  <Link href={`/rider/${horse.current_rider.id}`} className="text-[#f2f2f2] underline underline-offset-2 decoration-white/20 hover:decoration-white/60 transition-all">
+                  <Link href={`/rider/${horse.current_rider.id}`} className="text-[#f2f2f2] underline underline-offset-2 decoration-white/20 hover:decoration-white/60 transition-all whitespace-nowrap">
                     {horse.current_rider.name}
                   </Link>
                 </>
               )}
             </p>
-            <CopyLinkButton />
-            <WatchButton horseId={horse.id} />
-            <AddToStableButton entry={stableEntry} />
+            <div className="flex items-center gap-3 flex-wrap">
+              <CopyLinkButton />
+              <WatchButton horseId={horse.id} />
+              <AddToStableButton entry={stableEntry} />
+            </div>
           </div>
         </div>
       </motion.div>

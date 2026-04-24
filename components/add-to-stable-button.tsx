@@ -9,7 +9,7 @@ export default function AddToStableButton({ entry }: { entry: StableEntry }) {
   return (
     <button
       onClick={() => toggle(entry)}
-      className={`flex items-center gap-1 text-xs font-medium transition-colors ${
+      className={`flex items-center gap-1 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
         inStable
           ? 'text-emerald-400 hover:text-emerald-300'
           : 'text-[#4b5563] hover:text-[#9ca3af]'
