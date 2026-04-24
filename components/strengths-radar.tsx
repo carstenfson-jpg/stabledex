@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 
-const AXES = ['Consistency', 'Win rate', 'Top 3', 'Level', 'Experience', 'Form']
+const AXES = ['Consistency', 'Win rate', 'Top 3', 'Speed', 'Experience', 'Jump-off']
 
 interface Props {
   values: number[]
