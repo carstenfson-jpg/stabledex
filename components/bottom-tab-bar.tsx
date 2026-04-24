@@ -3,119 +3,183 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { getBestLevel } from '@/lib/types'
+import { getHorseTier } from './horse-icon'
+
+const WATCH_KEY = 'stabledex_watched'
+const SEEN_KEY  = 'stabledex_seen_results'
+
+interface WatchedHorse {
+  id: string
+  name: string
+  results: Array<{ id: string; created_at: string; competition: { level: string } | null }>
+}
+
+const TABS = [
+  {
+    label: 'Database', href: '/', exact: true,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Rankings', href: '/rankings', exact: false,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 21H5a2 2 0 01-2-2v-5a2 2 0 012-2h3m8 8h3a2 2 0 002-2v-5a2 2 0 00-2-2h-3m-4 9V8" />
+        <path d="M12 3l2 4H10l2-4z" />
+      </svg>
+    ),
+  },
+  {
+    label: 'My Stable', href: '/stable', exact: false,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 200 160" fill="none" stroke="currentColor" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="10,70 100,8 190,70" />
+        <rect x="14" y="68" width="172" height="84" />
+        <line x1="68" y1="68" x2="68" y2="152" /><line x1="132" y1="68" x2="132" y2="152" />
+        <line x1="14" y1="114" x2="68" y2="114" /><line x1="132" y1="114" x2="186" y2="114" />
+        <line x1="100" y1="68" x2="100" y2="114" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Events', href: '/events', exact: false,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
+      </svg>
+    ),
+  },
+]
 
 export default function BottomTabBar() {
   const pathname = usePathname()
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [watchOpen, setWatchOpen] = useState(false)
+  const [horses, setHorses] = useState<WatchedHorse[]>([])
+  const [newResults, setNewResults] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    const t = (document.documentElement.getAttribute('data-theme') ?? 'dark') as 'dark' | 'light'
-    setTheme(t)
-    function onTheme(e: Event) { setTheme((e as CustomEvent).detail as 'dark' | 'light') }
-    window.addEventListener('themechange', onTheme)
-    return () => window.removeEventListener('themechange', onTheme)
+    async function load() {
+      let ids: string[] = []
+      try { ids = JSON.parse(localStorage.getItem(WATCH_KEY) ?? '[]') } catch {}
+      if (ids.length === 0) { setHorses([]); return }
+
+      const seenRaw: Record<string, string> = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '{}')
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('horses')
+        .select('id, name, results(id, created_at, competition:competitions(level))')
+        .in('id', ids)
+
+      const rows = (data ?? []) as unknown as WatchedHorse[]
+      setHorses(rows)
+
+      const hasNew = new Set<string>()
+      for (const h of rows) {
+        const latest = [...h.results].sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
+        if (latest && seenRaw[h.id] && latest.created_at > seenRaw[h.id]) hasNew.add(h.id)
+        if (latest && !seenRaw[h.id]) seenRaw[h.id] = latest.created_at
+      }
+      localStorage.setItem(SEEN_KEY, JSON.stringify(seenRaw))
+      setNewResults(hasNew)
+    }
+    load()
+    window.addEventListener('stabledex_watch', load)
+    return () => window.removeEventListener('stabledex_watch', load)
   }, [])
 
-  function toggleTheme() {
-    const next = theme === 'dark' ? 'light' : 'dark'
-    document.documentElement.setAttribute('data-theme', next)
-    try { localStorage.setItem('app-theme', next) } catch {}
-    window.dispatchEvent(new CustomEvent('themechange', { detail: next }))
-    setTheme(next)
+  const hasNew = horses.some((h) => newResults.has(h.id))
+
+  function unwatch(id: string) {
+    setHorses((prev) => prev.filter((h) => h.id !== id))
+    try {
+      const ids: string[] = JSON.parse(localStorage.getItem(WATCH_KEY) ?? '[]')
+      localStorage.setItem(WATCH_KEY, JSON.stringify(ids.filter((x) => x !== id)))
+    } catch {}
   }
 
-  const tabs = [
-    {
-      label: 'Database',
-      href: '/',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
-        </svg>
-      ),
-    },
-    {
-      label: 'Rankings',
-      href: '/rankings',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M8 21H5a2 2 0 01-2-2v-5a2 2 0 012-2h3m8 8h3a2 2 0 002-2v-5a2 2 0 00-2-2h-3m-4 9V8" />
-          <path d="M12 3l2 4H10l2-4z" />
-        </svg>
-      ),
-    },
-    {
-      label: 'My Stable',
-      href: '/stable',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 200 160" fill="none" stroke="currentColor" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="10,70 100,8 190,70" />
-          <rect x="14" y="68" width="172" height="84" />
-          <line x1="68" y1="68" x2="68" y2="152" />
-          <line x1="132" y1="68" x2="132" y2="152" />
-          <line x1="14" y1="114" x2="68" y2="114" />
-          <line x1="132" y1="114" x2="186" y2="114" />
-          <line x1="100" y1="68" x2="100" y2="114" />
-        </svg>
-      ),
-    },
-    {
-      label: 'Events',
-      href: '/events',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M16 2v4M8 2v4M3 10h18" />
-        </svg>
-      ),
-    },
-  ]
-
   return (
-    <div
-      className="fixed bottom-0 left-0 right-0 bg-[#0f0f0f] border-t border-white/[.07] z-40 flex sm:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)', height: 'calc(56px + env(safe-area-inset-bottom))' }}
-    >
-      {tabs.map((tab) => {
-        const isActive = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href)
-        return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${
-              isActive ? 'text-emerald-400' : 'text-[#4b5563]'
-            }`}
+    <>
+      {/* Watchlist bottom sheet */}
+      {watchOpen && (
+        <div className="fixed inset-0 z-[60] sm:hidden" onClick={() => setWatchOpen(false)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            className="absolute bottom-14 left-0 right-0 bg-[#1a1a1a] border-t border-white/[.08] rounded-t-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
-            {tab.icon}
-            <span className="text-[9px]">{tab.label}</span>
-          </Link>
-        )
-      })}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/[.06]">
+              <p className="text-[11px] uppercase tracking-widest text-[#4b5563] font-medium">Watchlist</p>
+              <button onClick={() => setWatchOpen(false)} className="text-[#4b5563] text-lg leading-none">×</button>
+            </div>
+            {horses.length === 0 ? (
+              <p className="text-xs text-[#4b5563] px-4 py-6 text-center">No horses watched yet</p>
+            ) : (
+              <div className="max-h-72 overflow-y-auto">
+                {horses.map((h) => {
+                  const levels = h.results.map((r) => r.competition?.level).filter(Boolean) as string[]
+                  const tier = getHorseTier(levels.length > 0 ? getBestLevel(levels) : null)
+                  const dotColor = tier === 'gold' ? '#fbbf24' : tier === 'silver' ? '#cbd5e1' : '#4b5563'
+                  return (
+                    <div key={h.id} className="flex items-center gap-3 px-4 py-3 border-b border-white/[.05] last:border-0">
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
+                      <Link
+                        href={`/horse/${h.id}`}
+                        onClick={() => setWatchOpen(false)}
+                        className="flex-1 text-sm text-[#9ca3af] truncate"
+                      >
+                        {h.name}
+                      </Link>
+                      {newResults.has(h.id) && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
+                      <button onClick={() => unwatch(h.id)} className="text-[#4b5563] text-lg leading-none px-1">×</button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
-      {/* Theme toggle */}
-      <button
-        onClick={toggleTheme}
-        className="flex-1 flex flex-col items-center justify-center gap-1 text-[#4b5563] transition-colors active:text-[#9ca3af]"
-        aria-label="Toggle theme"
+      {/* Tab bar */}
+      <div
+        className="fixed bottom-0 left-0 right-0 bg-[#0f0f0f] border-t border-white/[.07] z-40 flex sm:hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)', height: 'calc(56px + env(safe-area-inset-bottom))' }}
       >
-        {theme === 'dark' ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="5" />
-            <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-            <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-          </svg>
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-          </svg>
-        )}
-        <span className="text-[9px]">{theme === 'dark' ? 'Light' : 'Dark'}</span>
-      </button>
-    </div>
+        {TABS.map(({ href, label, exact, icon }) => {
+          const isActive = exact ? pathname === href : pathname.startsWith(href)
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${isActive ? 'text-emerald-400' : 'text-[#4b5563]'}`}
+            >
+              {icon}
+              <span className="text-[9px]">{label}</span>
+            </Link>
+          )
+        })}
+
+        {/* Watchlist star tab */}
+        <button
+          onClick={() => setWatchOpen((o) => !o)}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${watchOpen ? 'text-[#f2f2f2]' : 'text-[#4b5563]'}`}
+        >
+          <span className="relative">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={horses.length > 0 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            {hasNew && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+          </span>
+          <span className="text-[9px]">Watchlist</span>
+        </button>
+      </div>
+    </>
   )
 }

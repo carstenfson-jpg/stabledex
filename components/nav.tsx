@@ -16,7 +16,7 @@ export default function Nav() {
         </Link>
         <div className="flex items-center gap-3 sm:gap-6">
           <NavLinks />
-          <NavWatchlist />
+          <div className="hidden sm:block"><NavWatchlist /></div>
           <ThemeToggle />
           <NavPaletteButton />
         </div>
