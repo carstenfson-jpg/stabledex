@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { getBestLevel } from '@/lib/types'
 import { getHorseTier } from './horse-icon'
@@ -106,46 +107,67 @@ export default function BottomTabBar() {
   return (
     <>
       {/* Watchlist bottom sheet */}
-      {watchOpen && (
-        <div className="fixed inset-0 z-[60] sm:hidden" onClick={() => setWatchOpen(false)}>
-          <div className="absolute inset-0 bg-black/40" />
-          <div
-            className="absolute bottom-14 left-0 right-0 bg-[#1a1a1a] border-t border-white/[.08] rounded-t-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-          >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/[.06]">
-              <p className="text-[11px] uppercase tracking-widest text-[#4b5563] font-medium">Watchlist</p>
-              <button onClick={() => setWatchOpen(false)} className="text-[#4b5563] text-lg leading-none">×</button>
-            </div>
-            {horses.length === 0 ? (
-              <p className="text-xs text-[#4b5563] px-4 py-6 text-center">No horses watched yet</p>
-            ) : (
-              <div className="max-h-72 overflow-y-auto">
-                {horses.map((h) => {
-                  const levels = h.results.map((r) => r.competition?.level).filter(Boolean) as string[]
-                  const tier = getHorseTier(levels.length > 0 ? getBestLevel(levels) : null)
-                  const dotColor = tier === 'gold' ? '#fbbf24' : tier === 'silver' ? '#cbd5e1' : '#4b5563'
-                  return (
-                    <div key={h.id} className="flex items-center gap-3 px-4 py-3 border-b border-white/[.05] last:border-0">
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
-                      <Link
-                        href={`/horse/${h.id}`}
-                        onClick={() => setWatchOpen(false)}
-                        className="flex-1 text-sm text-[#9ca3af] truncate"
-                      >
-                        {h.name}
-                      </Link>
-                      {newResults.has(h.id) && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
-                      <button onClick={() => unwatch(h.id)} className="text-[#4b5563] text-lg leading-none px-1">×</button>
-                    </div>
-                  )
-                })}
+      <AnimatePresence>
+        {watchOpen && (
+          <>
+            <motion.div
+              key="watchlist-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/40 z-[60] sm:hidden"
+              onClick={() => setWatchOpen(false)}
+            />
+            <motion.div
+              key="watchlist-sheet"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ duration: 0.26, ease: [0.32, 0.72, 0, 1] }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 60) setWatchOpen(false) }}
+              className="fixed left-0 right-0 z-[61] sm:hidden bg-[#1a1a1a] border-t border-white/[.08] rounded-t-2xl overflow-hidden"
+              style={{ bottom: 'calc(56px + env(safe-area-inset-bottom))', paddingBottom: 4 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Drag handle */}
+              <div className="w-9 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1" />
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/[.06]">
+                <p className="text-[11px] uppercase tracking-widest text-[#4b5563] font-medium">Watchlist</p>
+                <button onClick={() => setWatchOpen(false)} className="text-[#4b5563] text-lg leading-none">×</button>
               </div>
-            )}
-          </div>
-        </div>
-      )}
+              {horses.length === 0 ? (
+                <p className="text-xs text-[#4b5563] px-4 py-6 text-center">No horses watched yet</p>
+              ) : (
+                <div className="max-h-72 overflow-y-auto">
+                  {horses.map((h) => {
+                    const levels = h.results.map((r) => r.competition?.level).filter(Boolean) as string[]
+                    const tier = getHorseTier(levels.length > 0 ? getBestLevel(levels) : null)
+                    const dotColor = tier === 'gold' ? '#fbbf24' : tier === 'silver' ? '#cbd5e1' : '#4b5563'
+                    return (
+                      <div key={h.id} className="flex items-center gap-3 px-4 py-3 border-b border-white/[.05] last:border-0">
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
+                        <Link
+                          href={`/horse/${h.id}`}
+                          onClick={() => setWatchOpen(false)}
+                          className="flex-1 text-sm text-[#9ca3af] truncate"
+                        >
+                          {h.name}
+                        </Link>
+                        {newResults.has(h.id) && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
+                        <button onClick={() => unwatch(h.id)} className="text-[#4b5563] text-lg leading-none px-1">×</button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Tab bar */}
       <div

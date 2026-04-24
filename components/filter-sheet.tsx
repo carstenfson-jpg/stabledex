@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -32,27 +32,30 @@ function FilterSheetInner({ onClose }: { onClose: () => void }) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const set = useCallback(
-    (key: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString())
-      if (params.get(key) === value) {
-        params.delete(key)
-      } else {
-        params.set(key, value)
-      }
-      router.push(`/?${params.toString()}`)
-    },
-    [router, searchParams]
-  )
+  // Buffer all filter changes locally — no navigation until Done
+  const [discipline, setDiscipline] = useState(searchParams.get('discipline') ?? '')
+  const [level, setLevel] = useState(searchParams.get('level') ?? '')
+  const [country, setCountry] = useState(searchParams.get('country') ?? '')
+  const [breed, setBreed] = useState(searchParams.get('breed') ?? '')
 
-  const clearAll = useCallback(() => {
+  function apply() {
+    const params = new URLSearchParams(searchParams.toString())
+    if (discipline) params.set('discipline', discipline); else params.delete('discipline')
+    if (level) params.set('level', level); else params.delete('level')
+    if (country) params.set('country', country); else params.delete('country')
+    if (breed) params.set('breed', breed); else params.delete('breed')
+    router.push(`/?${params.toString()}`)
+    onClose()
+  }
+
+  function clearAll() {
+    setDiscipline('')
+    setLevel('')
+    setCountry('')
+    setBreed('')
     router.push('/')
-  }, [router])
-
-  const discipline = searchParams.get('discipline') ?? ''
-  const level = searchParams.get('level') ?? ''
-  const country = searchParams.get('country') ?? ''
-  const breed = searchParams.get('breed') ?? ''
+    onClose()
+  }
 
   return (
     <>
@@ -66,18 +69,24 @@ function FilterSheetInner({ onClose }: { onClose: () => void }) {
         onClick={onClose}
       />
 
-      {/* Panel */}
+      {/* Panel — draggable downward to dismiss */}
       <motion.div
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-        className="fixed bottom-0 left-0 right-0 bg-[#161616] rounded-t-2xl z-50 pb-8"
+        drag="y"
+        dragConstraints={{ top: 0 }}
+        dragElastic={{ top: 0, bottom: 0.4 }}
+        onDragEnd={(_, info) => { if (info.offset.y > 80) onClose() }}
+        className="fixed bottom-0 left-0 right-0 bg-[#161616] rounded-t-2xl z-50"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle */}
         <div className="w-9 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-5" />
 
-        <div className="px-5 overflow-y-auto max-h-[70vh]">
+        <div className="px-5 overflow-y-auto max-h-[65vh]">
           {/* Discipline */}
           <div className="mb-6">
             <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium mb-3">Discipline</p>
@@ -85,7 +94,7 @@ function FilterSheetInner({ onClose }: { onClose: () => void }) {
               {DISCIPLINES.map((d) => (
                 <button
                   key={d.value}
-                  onClick={() => set('discipline', d.value)}
+                  onClick={() => setDiscipline((v) => v === d.value ? '' : d.value)}
                   className={`h-10 flex-1 rounded-lg text-sm border border-[0.5px] transition-colors ${
                     discipline === d.value
                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
@@ -105,7 +114,7 @@ function FilterSheetInner({ onClose }: { onClose: () => void }) {
               {LEVELS.map((l) => (
                 <button
                   key={l.value}
-                  onClick={() => set('level', l.value)}
+                  onClick={() => setLevel((v) => v === l.value ? '' : l.value)}
                   className={`h-9 px-3 rounded-full text-xs border border-[0.5px] transition-colors ${
                     level === l.value
                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
@@ -125,7 +134,7 @@ function FilterSheetInner({ onClose }: { onClose: () => void }) {
               {COUNTRIES.map((c) => (
                 <button
                   key={c}
-                  onClick={() => set('country', c)}
+                  onClick={() => setCountry((v) => v === c ? '' : c)}
                   className={`h-9 px-3 rounded-full text-xs border border-[0.5px] transition-colors ${
                     country === c
                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
@@ -145,7 +154,7 @@ function FilterSheetInner({ onClose }: { onClose: () => void }) {
               {BREEDS.map((b) => (
                 <button
                   key={b}
-                  onClick={() => set('breed', b)}
+                  onClick={() => setBreed((v) => v === b ? '' : b)}
                   className={`h-9 px-3 rounded-full text-xs border border-[0.5px] transition-colors ${
                     breed === b
                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
@@ -160,7 +169,7 @@ function FilterSheetInner({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Footer */}
-        <div className="px-5 pt-4 flex gap-2 border-t border-white/[.07]">
+        <div className="px-5 pt-4 pb-4 flex gap-2 border-t border-white/[.07]">
           <button
             onClick={clearAll}
             className="h-12 flex-1 rounded-xl bg-white/[.04] border border-[0.5px] border-white/[.08] text-sm text-[#9ca3af] transition-colors hover:text-[#f2f2f2]"
@@ -168,7 +177,7 @@ function FilterSheetInner({ onClose }: { onClose: () => void }) {
             Clear all
           </button>
           <button
-            onClick={onClose}
+            onClick={apply}
             className="h-12 flex-1 rounded-xl bg-emerald-500 text-sm font-medium text-[#0f0f0f] transition-opacity hover:opacity-90"
           >
             Done
