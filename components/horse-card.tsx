@@ -32,21 +32,22 @@ export default function HorseCard({
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex items-center gap-4 px-3 py-3 sm:px-4 sm:py-3.5 hover:bg-white/[.04] transition-all duration-150 ease-out border-b border-[0.5px] border-white/[.06] last:border-0 group"
+      className="flex items-center gap-2 px-3 py-3 sm:px-4 sm:py-3.5 hover:bg-white/[.04] transition-all duration-150 ease-out border-b border-[0.5px] border-white/[.06] last:border-0 group"
     >
-      <span className="text-sm text-[#4b5563] w-7 shrink-0 tabular-nums">{rank}</span>
-
-      {/* Compare checkbox (visible on hover or selected) */}
-      <button
-        onClick={(e) => { e.stopPropagation(); toggle(id, name) }}
-        className={`shrink-0 w-4 h-4 rounded border border-[0.5px] flex items-center justify-center transition-all ${
-          isSelected
-            ? 'bg-emerald-500 border-emerald-500'
-            : 'border-white/[.2] opacity-0 group-hover:opacity-100'
-        }`}
-      >
-        {isSelected && <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><polyline points="1,4 3,6 7,2" stroke="#0f0f0f" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-      </button>
+      {/* Rank number — collapses into compare checkbox on desktop hover */}
+      <div className="w-6 shrink-0 flex items-center justify-center relative">
+        <span className={`text-sm text-[#4b5563] tabular-nums transition-opacity duration-150 select-none ${(hovered || isSelected) ? 'sm:opacity-0' : ''}`}>{rank}</span>
+        <button
+          onClick={(e) => { e.stopPropagation(); toggle(id, name) }}
+          className={`absolute hidden sm:flex w-4 h-4 rounded border border-[0.5px] items-center justify-center transition-all duration-150 ${
+            isSelected
+              ? 'opacity-100 bg-emerald-500 border-emerald-500'
+              : 'border-white/[.2] opacity-0 group-hover:opacity-100'
+          }`}
+        >
+          {isSelected && <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><polyline points="1,4 3,6 7,2" stroke="#0f0f0f" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+        </button>
+      </div>
 
       <Link href={`/horse/${id}`} className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
         <HorseIcon tier={tier} active={hovered} />
