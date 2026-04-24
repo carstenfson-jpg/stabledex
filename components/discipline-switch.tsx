@@ -12,6 +12,15 @@ export default function DisciplineSwitch() {
   const searchParams = useSearchParams()
   const [val, setVal] = useState<Val>('sj')
   const [mounted, setMounted] = useState(false)
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+
+  useEffect(() => {
+    const t = (document.documentElement.getAttribute('data-theme') ?? 'dark') as 'dark' | 'light'
+    setTheme(t)
+    function onTheme(e: Event) { setTheme((e as CustomEvent).detail as 'dark' | 'light') }
+    window.addEventListener('themechange', onTheme)
+    return () => window.removeEventListener('themechange', onTheme)
+  }, [])
 
   useEffect(() => {
     let saved: Val = 'sj'
@@ -38,6 +47,13 @@ export default function DisciplineSwitch() {
     document.dispatchEvent(new CustomEvent('discipline:change', { detail: v }))
   }
 
+  const dark = theme === 'dark'
+  const thumbBg = dark ? '#f2f2f2' : '#16231c'
+  const activeTextColor = dark ? '#0f0f0f' : '#f6f6f3'
+  const containerBorder = dark
+    ? '0.5px solid rgba(255,255,255,0.08)'
+    : '1px solid rgba(22,35,28,0.18)'
+
   return (
     <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
       <div
@@ -45,9 +61,9 @@ export default function DisciplineSwitch() {
           position: 'relative',
           display: 'inline-flex',
           padding: 3,
-          background: 'var(--c-surface2, #222)',
+          background: 'var(--c-surface2)',
           borderRadius: 9999,
-          border: '0.5px solid var(--c-border, rgba(255,255,255,0.08))',
+          border: containerBorder,
         }}
       >
         {/* Sliding thumb */}
@@ -56,7 +72,7 @@ export default function DisciplineSwitch() {
             position: 'absolute',
             top: 3, bottom: 3, left: 3,
             width: 'calc(50% - 3px)',
-            background: '#f2f2f2',
+            background: thumbBg,
             borderRadius: 9999,
             transition: 'transform 0.35s cubic-bezier(0.65, 0.05, 0.25, 1)',
             transform: mounted && val === 'dr' ? 'translateX(100%)' : 'translateX(0)',
@@ -79,7 +95,7 @@ export default function DisciplineSwitch() {
               fontFamily: 'Inter, system-ui, sans-serif',
               fontSize: 13,
               fontWeight: val === v ? 600 : 500,
-              color: val === v ? '#0f0f0f' : 'var(--c-muted, #6b7280)',
+              color: val === v ? activeTextColor : 'var(--c-muted)',
               transition: 'color 0.25s ease',
             }}
           >
