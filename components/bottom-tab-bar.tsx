@@ -64,6 +64,15 @@ export default function BottomTabBar() {
   const [horses, setHorses] = useState<WatchedHorse[]>([])
   const [newResults, setNewResults] = useState<Set<string>>(new Set())
 
+  // Signal to SwipeBack that a sheet is open
+  useEffect(() => {
+    if (watchOpen) {
+      document.body.setAttribute('data-sheet', 'open')
+    } else {
+      document.body.removeAttribute('data-sheet')
+    }
+  }, [watchOpen])
+
   useEffect(() => {
     async function load() {
       let ids: string[] = []
@@ -133,8 +142,10 @@ export default function BottomTabBar() {
               style={{ bottom: 'calc(56px + env(safe-area-inset-bottom))', paddingBottom: 4 }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Drag handle */}
-              <div className="w-9 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1" />
+              {/* Drag handle — tap or drag down to close */}
+              <div className="flex justify-center pt-3 pb-1 cursor-pointer" onClick={() => setWatchOpen(false)}>
+                <div className="w-9 h-1 bg-white/20 rounded-full" />
+              </div>
               <div className="flex items-center justify-between px-4 py-3 border-b border-white/[.06]">
                 <p className="text-[11px] uppercase tracking-widest text-[#4b5563] font-medium">Watchlist</p>
                 <button onClick={() => setWatchOpen(false)} className="text-[#4b5563] text-lg leading-none">×</button>

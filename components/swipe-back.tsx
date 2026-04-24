@@ -15,8 +15,9 @@ export default function SwipeBack() {
 
   useEffect(() => {
     function onTouchStart(e: TouchEvent) {
-      // Only activate when page is scrolled to the very top
+      // Only activate when page is scrolled to the very top and no sheet is open
       if (window.scrollY > 4) return
+      if (document.body.hasAttribute('data-sheet')) return
       startY.current = e.touches[0].clientY
       startX.current = e.touches[0].clientX
       active.current = true

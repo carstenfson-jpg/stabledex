@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -31,6 +31,12 @@ const BREEDS = ['KWPN', 'Hanoverian', 'SWB', 'Oldenburg', 'Holsteiner']
 function FilterSheetInner({ onClose }: { onClose: () => void }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // Signal to SwipeBack that a sheet is covering the screen
+  useEffect(() => {
+    document.body.setAttribute('data-sheet', 'open')
+    return () => document.body.removeAttribute('data-sheet')
+  }, [])
 
   // Buffer all filter changes locally — no navigation until Done
   const [discipline, setDiscipline] = useState(searchParams.get('discipline') ?? '')
@@ -83,8 +89,10 @@ function FilterSheetInner({ onClose }: { onClose: () => void }) {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle */}
-        <div className="w-9 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-5" />
+        {/* Drag handle — tap or drag down to close */}
+        <div className="flex justify-center pt-3 pb-4 cursor-pointer" onClick={onClose}>
+          <div className="w-9 h-1 bg-white/20 rounded-full" />
+        </div>
 
         <div className="px-5 overflow-y-auto max-h-[65vh]">
           {/* Discipline */}
