@@ -114,9 +114,10 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
           const { ctx, chartArea } = chart
           if (!chartArea) return
           const p: number = chart.options.plugins.clipLeft?.progress ?? 1
+          const PAD = 8
           ctx.save()
           ctx.beginPath()
-          ctx.rect(chartArea.left, chartArea.top - 10, chartArea.width * p, chartArea.height + 20)
+          ctx.rect(chartArea.left - PAD, chartArea.top - PAD, chartArea.width * p + PAD * 2, chartArea.height + PAD * 2)
           ctx.clip()
         },
         afterDatasetsDraw(chart: any) { chart.ctx.restore() },
