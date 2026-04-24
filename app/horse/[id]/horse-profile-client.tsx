@@ -364,9 +364,11 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
                 <Row label="Sire" value={horse.sire ?? '—'} />
                 <Row label="Dam" value={horse.dam ?? '—'} />
                 <Row label="Rider" value={horse.current_rider?.name ?? '—'} href={horse.current_rider ? `/rider/${horse.current_rider.id}` : undefined} />
+                <Row label="Owner" value={horse.owner ?? '—'} />
                 <Row label="Best level" value={stats.bestLevel ?? '—'} />
               </dl>
             </div>
+            <AchievementsSection results={sortedResults} />
           </>
         )}
         {tab === 'strengths' && (
@@ -461,6 +463,10 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
           <StrengthsRadar values={stats.strengthValues} />
         </motion.div>
 
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut', delay: 0.48 }} className="mb-6">
+          <AchievementsSection results={sortedResults} />
+        </motion.div>
+
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut', delay: 0.5 }}>
           <Timeline results={sortedResults} />
         </motion.div>
@@ -527,6 +533,126 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
         </motion.div>
       </div>
 
+    </div>
+  )
+}
+
+// ── Achievements ─────────────────────────────────────────────────────────────
+
+const GP_LEVELS = new Set(['CSI5*', 'GP', 'CDIO5*', 'CDI5*', 'CDIO', 'CCI4*'])
+
+interface Achievement {
+  id: string
+  title: string
+  description: string
+  iconType: 'trophy' | 'star' | 'zap' | 'shield' | 'globe'
+  iconBg: string
+  unlockedAt: string | null
+}
+
+function computeAchievements(results: ResultRow[]): Achievement[] {
+  const byDate = [...results]
+    .filter((r) => r.competition?.date)
+    .sort((a, b) => a.competition!.date.localeCompare(b.competition!.date))
+
+  const firstWin = byDate.find((r) => r.placement === 1)
+  const gpDebut = byDate.find((r) => GP_LEVELS.has(r.competition?.level ?? ''))
+
+  const sjByDate = byDate.filter(
+    (r) => r.competition?.discipline === 'Show Jumping' && r.faults != null
+  )
+  let cleanStreakDate: string | null = null
+  let streak = 0
+  for (const r of sjByDate) {
+    if ((r.faults ?? 1) === 0) {
+      streak++
+      if (streak >= 5) { cleanStreakDate = r.competition!.date; break }
+    } else { streak = 0 }
+  }
+
+  const veteranDate = byDate[49]?.competition?.date ?? null
+
+  const seen = new Set<string>()
+  let internationalDate: string | null = null
+  for (const r of byDate) {
+    const c = r.competition?.country
+    if (c) {
+      seen.add(c)
+      if (seen.size >= 5 && !internationalDate) internationalDate = r.competition!.date
+    }
+  }
+
+  return [
+    { id: 'first-win', title: 'First Win',
+      description: firstWin ? `1st place at ${firstWin.competition?.level ?? 'competition'}` : '1st place finish',
+      iconType: 'trophy', iconBg: '#78350f', unlockedAt: firstWin?.competition?.date ?? null },
+    { id: 'gp-debut', title: 'GP Debut',
+      description: 'First CSI5* / GP result',
+      iconType: 'star', iconBg: '#1e3a5f', unlockedAt: gpDebut?.competition?.date ?? null },
+    { id: 'clean-streak', title: 'Clean Streak',
+      description: '5 consecutive clear rounds',
+      iconType: 'zap', iconBg: '#064e3b', unlockedAt: cleanStreakDate },
+    { id: 'veteran', title: 'Veteran',
+      description: '50+ career starts',
+      iconType: 'shield', iconBg: '#1e293b', unlockedAt: veteranDate },
+    { id: 'international', title: 'International',
+      description: 'Competed in 5+ countries',
+      iconType: 'globe', iconBg: '#1a2e1a', unlockedAt: internationalDate },
+  ]
+}
+
+function AchievementIcon({ type }: { type: Achievement['iconType'] }) {
+  const props = { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  if (type === 'trophy') return <svg {...props}><path d="M6 9H3V4h18v5h-3"/><path d="M12 15v3"/><path d="M8 18h8"/><path d="M6 9a6 6 0 0012 0"/></svg>
+  if (type === 'star') return <svg {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+  if (type === 'zap') return <svg {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+  if (type === 'shield') return <svg {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  return <svg {...props}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+}
+
+function AchievementsSection({ results }: { results: ResultRow[] }) {
+  const achievements = computeAchievements(results)
+  const unlocked = achievements.filter((a) => a.unlockedAt !== null)
+  const locked = achievements.filter((a) => a.unlockedAt === null)
+  const ordered = [...unlocked, ...locked]
+
+  return (
+    <div className="border border-[0.5px] border-white/[.07] rounded-xl bg-[#1a1a1a] overflow-hidden">
+      <p className="text-[10px] uppercase tracking-widest text-[#4b5563] font-medium px-4 pt-4 pb-3">
+        Achievements
+      </p>
+      <div className="flex flex-col">
+        {ordered.map((a, i) => {
+          const isUnlocked = a.unlockedAt !== null
+          const date = a.unlockedAt
+            ? new Date(a.unlockedAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+            : null
+          return (
+            <div
+              key={a.id}
+              className={`flex items-center gap-3.5 px-4 py-3 ${i < ordered.length - 1 ? 'border-b border-[0.5px] border-white/[.05]' : ''}`}
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: isUnlocked ? a.iconBg : 'rgba(255,255,255,0.04)' }}
+              >
+                {isUnlocked ? (
+                  <span className="text-white/90"><AchievementIcon type={a.iconType} /></span>
+                ) : (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#4b5563]">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-medium ${isUnlocked ? 'text-[#f2f2f2]' : 'text-[#4b5563]'}`}>{a.title}</p>
+                <p className={`text-[11px] mt-0.5 ${isUnlocked ? 'text-[#6b7280]' : 'text-[#374151]'}`}>{a.description}</p>
+              </div>
+              {date && <p className="text-[11px] text-[#4b5563] shrink-0 tabular-nums">{date}</p>}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

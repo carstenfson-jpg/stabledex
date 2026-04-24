@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { getCountryFlag, getBestLevel, getDominantDiscipline, LEVEL_ORDER, type Discipline } from '@/lib/types'
-import { getHorseTier, HorseIcon } from '@/components/horse-icon'
+import { getCountryFlag, getDominantDiscipline, type Discipline } from '@/lib/types'
+import RiderHorseList from '@/components/rider-horse-list'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -53,7 +53,7 @@ export default async function RiderPage({ params }: PageProps) {
   const supabase = await createClient()
 
   const [{ data: rider }, { data: resultsRaw }, { data: horsesRaw }] = await Promise.all([
-    supabase.from('riders').select('id, name, country, fei_id').eq('id', id).single(),
+    supabase.from('riders').select('id, name, country, fei_id, date_of_birth').eq('id', id).single(),
     supabase
       .from('results')
       .select('id, placement, horse_id, competition:competitions(date, level, discipline)')
@@ -124,15 +124,6 @@ export default async function RiderPage({ params }: PageProps) {
       : ''
   const gradId = `form-grad-${id.slice(0, 8)}`
 
-  // Horse list sorted by best level descending
-  const sortedHorses = [...horses].sort((a, b) => {
-    const levA = a.results.map((r) => r.competition?.level).filter((l): l is string => Boolean(l))
-    const levB = b.results.map((r) => r.competition?.level).filter((l): l is string => Boolean(l))
-    const bestA = levA.length > 0 ? getBestLevel(levA) : null
-    const bestB = levB.length > 0 ? getBestLevel(levB) : null
-    return (LEVEL_ORDER[bestB ?? ''] ?? 0) - (LEVEL_ORDER[bestA ?? ''] ?? 0)
-  })
-
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
@@ -152,6 +143,12 @@ export default async function RiderPage({ params }: PageProps) {
           </h1>
           <p className="text-sm text-[#6b7280] mb-2.5">
             {rider.country && `${getCountryFlag(rider.country)} ${rider.country}`}
+            {(() => {
+              const dob = (rider as Record<string, unknown>).date_of_birth as string | null | undefined
+              if (!dob) return null
+              const age = Math.floor((Date.now() - new Date(dob).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+              return <span className="ml-3 text-[#4b5563]">{age} years old</span>
+            })()}
             {rider.fei_id && <span className="ml-3 tabular-nums text-[#4b5563]">FEI {rider.fei_id}</span>}
           </p>
           <div className="flex items-center gap-2 flex-wrap">
@@ -236,53 +233,7 @@ export default async function RiderPage({ params }: PageProps) {
       <p className="text-[10px] uppercase tracking-[0.1em] text-[#4b5563] font-medium mb-3">
         Horses ({horses.length})
       </p>
-
-      {horses.length === 0 ? (
-        <p className="text-sm text-[#4b5563]">No horses registered for this rider.</p>
-      ) : (
-        <div className="border border-[0.5px] border-white/[.07] rounded-xl overflow-hidden bg-[#1a1a1a]">
-          {sortedHorses.map((horse) => {
-            const levels = horse.results
-              .map((r) => r.competition?.level)
-              .filter((l): l is string => Boolean(l))
-            const bestLevel = levels.length > 0 ? getBestLevel(levels) : null
-            const tier = getHorseTier(bestLevel)
-
-            const age = horse.date_of_birth
-              ? Math.floor(
-                  (Date.now() - new Date(horse.date_of_birth).getTime()) /
-                    (1000 * 60 * 60 * 24 * 365.25)
-                )
-              : null
-
-            const meta = [horse.breed, age != null ? `${age} y.o.` : null, horse.country ? getCountryFlag(horse.country) : null]
-              .filter(Boolean)
-              .join(' · ')
-
-            return (
-              <Link
-                key={horse.id}
-                href={`/horse/${horse.id}`}
-                className="flex items-center gap-4 px-4 py-3.5 hover:bg-white/[.04] transition-colors border-b border-[0.5px] border-white/[.05] last:border-0"
-              >
-                <HorseIcon tier={tier} active={tier !== 'gray'} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[#f2f2f2] truncate">{horse.name}</p>
-                  <p className="text-xs text-[#6b7280] mt-0.5 truncate">{meta}</p>
-                </div>
-                {bestLevel && (
-                  <span className="shrink-0 inline-flex items-center h-5 px-2 rounded-full text-[10px] border border-[0.5px] bg-white/[.04] border-white/[.08] text-[#6b7280]">
-                    {bestLevel}
-                  </span>
-                )}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#4b5563] shrink-0">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </Link>
-            )
-          })}
-        </div>
-      )}
+      <RiderHorseList horses={horses as Parameters<typeof RiderHorseList>[0]['horses']} />
     </div>
   )
 }

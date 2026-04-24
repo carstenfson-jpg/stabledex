@@ -17,8 +17,10 @@ create table riders (
   id text primary key,
   name text not null,
   country text not null,
-  fei_id text
+  fei_id text,
+  date_of_birth date
 );
+-- Migration for existing tables: ALTER TABLE riders ADD COLUMN IF NOT EXISTS date_of_birth date;
 
 create table horses (
   id text primary key,
