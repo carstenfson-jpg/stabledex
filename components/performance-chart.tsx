@@ -152,7 +152,7 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
           responsive: true,
           maintainAspectRatio: false,
           layout: {
-            padding: { top: 10, right: 16, bottom: 4, left: 4 },
+            padding: { top: 14, right: 20, bottom: 4, left: 8 },
           },
           scales: {
             x: {
@@ -255,7 +255,7 @@ export default function PerformanceChart({ results }: { results: ResultWithComp[
           No jumping results in this period
         </div>
       ) : (
-        <div className="h-44 relative overflow-hidden">
+        <div className="h-44 relative overflow-visible">
           <canvas ref={canvasRef} />
         </div>
       )}
