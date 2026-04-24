@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import RankingsTabs from './rankings-tabs'
 import type { RankingRow } from '@/lib/types'
 import { getCountryFlag } from '@/lib/types'
+import BackButton from '@/components/back-button'
 
 interface PageProps {
   searchParams: Promise<Record<string, string | undefined>>
@@ -55,6 +56,7 @@ export default async function RankingsPage({ searchParams }: PageProps) {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <BackButton />
       <div className="flex items-center gap-3 mb-8">
         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#f2f2f2]">Rankings</h1>
         {liveCount > 0 && (

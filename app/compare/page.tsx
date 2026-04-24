@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getDominantDiscipline, getBestLevel, LEVEL_ORDER, type HorseWithDetails, type Discipline } from '@/lib/types'
 import Link from 'next/link'
+import BackButton from '@/components/back-button'
 
 interface PageProps {
   searchParams: Promise<{ ids?: string }>
@@ -51,10 +52,8 @@ export default async function ComparePage({ searchParams }: PageProps) {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">
-      <div className="flex items-center gap-3 mb-8">
-        <Link href="/" className="text-[#4b5563] hover:text-[#6b7280] transition-colors text-sm">← Back</Link>
-        <h1 className="text-2xl font-semibold text-[#f2f2f2]">Compare horses</h1>
-      </div>
+      <BackButton />
+      <h1 className="text-2xl font-semibold text-[#f2f2f2] mb-8">Compare horses</h1>
 
       {/* Horse headers */}
       <div className="grid gap-4 mb-8" style={{ gridTemplateColumns: `repeat(${horses.length}, 1fr)` }}>

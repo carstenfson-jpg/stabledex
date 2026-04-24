@@ -10,6 +10,7 @@ import { getCountryFlag, getBestLevel, LEVEL_ORDER, type HorseWithDetails } from
 import type { Result, Competition, Rider } from '@/lib/types'
 import { getHorseTier, HorseIcon } from '@/components/horse-icon'
 import AddToStableButton from '@/components/add-to-stable-button'
+import BackButton from '@/components/back-button'
 
 type ResultRow = Result & { rider: Rider; competition: Competition }
 
@@ -288,6 +289,7 @@ export default function HorseProfileClient({ horse, stats, discipline, sortedRes
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <BackButton />
       {/* Hero */}
       <motion.div
         initial={{ opacity: 0, y: 14 }}

@@ -54,7 +54,7 @@ export default async function RiderPage({ params }: PageProps) {
   const supabase = await createClient()
 
   const [{ data: rider }, { data: resultsRaw }, { data: horsesRaw }] = await Promise.all([
-    supabase.from('riders').select('id, name, country, fei_id, date_of_birth').eq('id', id).single(),
+    supabase.from('riders').select('id, name, country, fei_id').eq('id', id).single(),
     supabase
       .from('results')
       .select('id, placement, horse_id, competition:competitions(date, level, discipline)')
@@ -145,11 +145,6 @@ export default async function RiderPage({ params }: PageProps) {
           </h1>
           <p className="text-sm text-[#6b7280] mb-2.5">
             {rider.country && `${getCountryFlag(rider.country)} ${rider.country}`}
-            {(rider as Record<string, unknown>).date_of_birth && (
-              <span className="ml-3 tabular-nums text-[#4b5563]">
-                b. {new Date((rider as Record<string, unknown>).date_of_birth as string).getFullYear()}
-              </span>
-            )}
             {rider.fei_id && <span className="ml-3 tabular-nums text-[#4b5563]">FEI {rider.fei_id}</span>}
           </p>
           <div className="flex items-center gap-2 flex-wrap">

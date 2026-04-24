@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useStable, type StableEntry } from '@/lib/use-stable'
 import { getCountryFlag } from '@/lib/types'
 import { getHorseTier, HorseIcon } from '@/components/horse-icon'
+import BackButton from '@/components/back-button'
 
 type SortKey = 'added' | 'result' | 'age' | 'name'
 
@@ -42,6 +43,7 @@ export default function StablePage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <BackButton />
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-[22px] font-semibold text-[#f2f2f2] tracking-[-0.025em] mb-1">My Stable</h1>
