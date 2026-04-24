@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getCountryFlag, getDominantDiscipline, type Discipline } from '@/lib/types'
 import RiderHorseList from '@/components/rider-horse-list'
+import BackButton from '@/components/back-button'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -126,6 +127,7 @@ export default async function RiderPage({ params }: PageProps) {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <BackButton />
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-5 mb-8">
